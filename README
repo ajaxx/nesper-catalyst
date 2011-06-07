@@ -1,0 +1,10 @@
+NEsper-Catalyst
+
+This product is a standalone server (service) that exposes the capabilities
+of the NEsper product.  The objective is to allow a clean separation between
+lightweight processors of event flow and heavy weight event processing engines.
+
+This product is released under the GPL v2.
+
+This package contains Esper components Copyright (C) 2008 EsperTech, licensed
+under the GPL v2.

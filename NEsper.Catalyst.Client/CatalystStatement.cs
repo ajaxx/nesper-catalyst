@@ -1,4 +1,11 @@
-﻿using System;
+﻿///////////////////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2011 Patchwork Consulting. All rights reserved.                      /
+// ---------------------------------------------------------------------------------- /
+// The software in this package is published under the terms of the GPL license       /
+// a copy of which has been included with this distribution in the license.txt file.  /
+///////////////////////////////////////////////////////////////////////////////////////
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -51,7 +58,7 @@ namespace NEsper.Catalyst.Client
                 _eventHandler += value;
                 if ( _eventSubscriber == null ) {
                     _eventSubscriber = Adapter.EventConsumerFactory.Subscribe(
-                        new Uri(StatementDescriptor.URI), ReceiveEvents);
+                        StatementDescriptor.URIs, ReceiveEvents);
                 }
             }
             remove

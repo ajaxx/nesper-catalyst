@@ -118,7 +118,7 @@
     <Compile Include="StatementDescriptor.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\NEsper-4.1\NEsper\NEsper\NEsper.csproj">
+    <ProjectReference Include="..\..\NEsper\NEsper\NEsper\NEsper.csproj">
       <Project>{8376DC7A-06AC-40F1-9338-9AC5AF788356}</Project>
       <Name>NEsper %28NEsper\NEsper%29</Name>
     </ProjectReference>

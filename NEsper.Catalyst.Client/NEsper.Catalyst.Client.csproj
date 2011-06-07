@@ -95,6 +95,9 @@
     <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="RabbitMQ.Client">
+      <HintPath>..\lib\RabbitMQ.Client.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Messaging" />
@@ -116,13 +119,16 @@
     <Compile Include="ChannelWrapper.cs" />
     <Compile Include="DispatchEventConsumerFactory.cs" />
     <Compile Include="IEventConsumerFactory.cs" />
+    <Compile Include="MessageExtensions.cs" />
     <Compile Include="MsmqEventConsumer.cs" />
     <Compile Include="MsmqEventConsumerFactory.cs" />
     <Compile Include="CatalystEventBean.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RabbitMqEventConsumer.cs" />
+    <Compile Include="RabbitMqEventConsumerFactory.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\NEsper-4.1\NEsper\NEsper\NEsper.csproj">
+    <ProjectReference Include="..\..\NEsper\NEsper\NEsper\NEsper.csproj">
       <Project>{8376DC7A-06AC-40F1-9338-9AC5AF788356}</Project>
       <Name>NEsper %28NEsper\NEsper%29</Name>
     </ProjectReference>

@@ -1,4 +1,11 @@
-﻿using System.Collections.Generic;
+﻿///////////////////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2011 Patchwork Consulting. All rights reserved.                      /
+// ---------------------------------------------------------------------------------- /
+// The software in this package is published under the terms of the GPL license       /
+// a copy of which has been included with this distribution in the license.txt file.  /
+///////////////////////////////////////////////////////////////////////////////////////
+
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Runtime.Serialization;
 
@@ -6,7 +13,8 @@ using com.espertech.esper.client;
 
 namespace NEsper.Catalyst.Common
 {
-    [DataContract(Namespace = "http://www.espertech.com")]
+    [DataContract(
+        Namespace = "http://www.patchwork-consulting.org")]
     public class StatementDescriptor
     {
         /// <summary>
@@ -21,7 +29,7 @@ namespace NEsper.Catalyst.Common
         /// </summary>
         /// <value>The URI.</value>
         [DataMember]
-        public string URI { get; set; }
+        public string[] URIs { get; set; }
 
         /// <summary>Returns true if statement is a pattern</summary>
         /// <returns>true if statement is a pattern</returns>
@@ -35,7 +43,7 @@ namespace NEsper.Catalyst.Common
 
     [CollectionDataContract(
         Name = "StatementDescriptorCollection",
-        Namespace = "http://www.espertech.com",
+        Namespace = "http://www.patchwork-consulting.org",
         ItemName = "Descriptor")]
     public class StatementDescriptorCollection : Collection<StatementDescriptor>
     {

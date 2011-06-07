@@ -1,4 +1,11 @@
-﻿using System;
+﻿///////////////////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2011 Patchwork Consulting. All rights reserved.                      /
+// ---------------------------------------------------------------------------------- /
+// The software in this package is published under the terms of the GPL license       /
+// a copy of which has been included with this distribution in the license.txt file.  /
+///////////////////////////////////////////////////////////////////////////////////////
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -51,6 +58,26 @@ namespace NEsper.Catalyst.Client
             }
 
             return selectFactory.Subscribe(uri, eventHandler);
+        }
+
+        /// <summary>
+        /// Subscribes the specified uris.
+        /// </summary>
+        /// <param name="uris">The uris.</param>
+        /// <param name="eventHandler">The event handler.</param>
+        /// <returns></returns>
+        public IDisposable Subscribe(IEnumerable<string> uris, EventHandler<UpdateEventArgs> eventHandler)
+        {
+            foreach (var uriText in uris) {
+                var uri = new Uri(uriText);
+                var selectFactory = Factories.FirstOrDefault(
+                    factory => factory.CanHandle(uri));
+                if (selectFactory != null) {
+                    return selectFactory.Subscribe(uri, eventHandler);
+                }
+            }
+
+            throw new ArgumentException("unable to find URI handler to handle subscription");
         }
     }
 }

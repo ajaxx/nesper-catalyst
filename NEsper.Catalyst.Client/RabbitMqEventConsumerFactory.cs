@@ -8,17 +8,23 @@
 using System;
 
 using com.espertech.esper.client;
+using RabbitMQ.Client;
 
 namespace NEsper.Catalyst.Client
 {
-    public class MsmqEventConsumerFactory
+    public class RabbitMqEventConsumerFactory
         : IEventConsumerFactory
     {
+        private readonly ConnectionFactory _connectionFactory;
+
         /// <summary>
-        /// Initializes a new instance of the <see cref="MsmqEventConsumerFactory"/> class.
+        /// Initializes a new instance of the <see cref="RabbitMqEventConsumerFactory"/> class.
         /// </summary>
-        public MsmqEventConsumerFactory()
+        /// <param name="address">The rabbitmq exchange address.</param>
+        public RabbitMqEventConsumerFactory(string address)
         {
+            _connectionFactory = new ConnectionFactory();
+            _connectionFactory.Address = address;
         }
 
         /// <summary>
@@ -30,7 +36,7 @@ namespace NEsper.Catalyst.Client
         /// </returns>
         public bool CanHandle(Uri uri)
         {
-            return uri.Scheme == "msmq";
+            return uri.Scheme == "rabbitmq";
         }
 
         /// <summary>
@@ -43,7 +49,7 @@ namespace NEsper.Catalyst.Client
         /// <returns></returns>
         public IDisposable Subscribe(Uri uri, EventHandler<UpdateEventArgs> eventHandler)
         {
-            return new MsmqEventConsumer(uri.LocalPath, eventHandler);
+            return new RabbitMqEventConsumer(_connectionFactory, uri.LocalPath, eventHandler);
         }
     }
 }

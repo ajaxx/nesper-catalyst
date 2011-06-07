@@ -102,7 +102,14 @@
     <Reference Include="log4net">
       <HintPath>..\lib\log4net.dll</HintPath>
     </Reference>
+    <Reference Include="RabbitMQ.Client">
+      <HintPath>..\lib\RabbitMQ.Client.dll</HintPath>
+    </Reference>
+    <Reference Include="RabbitMQ.ServiceModel">
+      <HintPath>..\lib\RabbitMQ.ServiceModel.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Messaging" />
     <Reference Include="System.Runtime.Serialization" />
@@ -115,8 +122,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configuration\CatalystConfiguration.cs" />
+    <Compile Include="Configuration\PublisherElement.cs" />
+    <Compile Include="Configuration\PublisherCollection.cs" />
     <Compile Include="MsmqEventPublisher.cs" />
     <Compile Include="MsmqEventPublisherFactory.cs" />
+    <Compile Include="RabbitMqEventPublisher.cs" />
+    <Compile Include="RabbitMqEventPublisherFactory.cs" />
     <Compile Include="StatementCreationEventArgs.cs" />
     <Compile Include="EngineInstance.cs" />
     <Compile Include="EngineManager.cs" />
@@ -129,15 +141,15 @@
     <Compile Include="RestControlManager.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\NEsper-4.1\CGLib\CGLib.csproj">
+    <ProjectReference Include="..\..\NEsper\CGLib\CGLib.csproj">
       <Project>{C05D6633-77BF-4985-80F9-EE4F03BAC83E}</Project>
       <Name>CGLib</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\NEsper-4.1\NEsper\NEsper.Runtime\NEsper.Runtime.csproj">
+    <ProjectReference Include="..\..\NEsper\NEsper\NEsper.Runtime\NEsper.Runtime.csproj">
       <Project>{D7A8B523-B181-4954-B32B-2E1EEB42989A}</Project>
       <Name>NEsper.Runtime</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\NEsper-4.1\NEsper\NEsper\NEsper.csproj">
+    <ProjectReference Include="..\..\NEsper\NEsper\NEsper\NEsper.csproj">
       <Project>{8376DC7A-06AC-40F1-9338-9AC5AF788356}</Project>
       <Name>NEsper %28NEsper\NEsper%29</Name>
     </ProjectReference>

@@ -1,13 +1,21 @@
-﻿using System.Runtime.Serialization;
+﻿///////////////////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2011 Patchwork Consulting. All rights reserved.                      /
+// ---------------------------------------------------------------------------------- /
+// The software in this package is published under the terms of the GPL license       /
+// a copy of which has been included with this distribution in the license.txt file.  /
+///////////////////////////////////////////////////////////////////////////////////////
+
+using System.Runtime.Serialization;
 using System.ServiceModel;
 using System.ServiceModel.Web;
 using System.Xml.Linq;
+
 using com.espertech.esper.client.soda;
 
 namespace NEsper.Catalyst.Common
 {
     [ServiceContract(
-        Namespace = "http://www.espertech.com",
+        Namespace = "http://www.patchwork-consulting.org",
         Name = "ControlManager")]
     public interface IControlManager
     {
@@ -149,12 +157,12 @@ namespace NEsper.Catalyst.Common
         /// <returns></returns>
         [OperationContract]
         [WebGet(UriTemplate = "/statistics/{instanceId}")]
-        InstanceStatistics GetStatistics(string instanceId);
+        InstanceStatistics GetInstanceStatistics(string instanceId);
         #endregion
     }
 
     [DataContract(
-        Namespace = "http://www.espertech.com",
+        Namespace = "http://www.patchwork-consulting.org",
         Name = "JsonEvent")]
     public class JsonEventArgs
     {

@@ -1,4 +1,11 @@
-﻿using System;
+﻿///////////////////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2011 Patchwork Consulting. All rights reserved.                      /
+// ---------------------------------------------------------------------------------- /
+// The software in this package is published under the terms of the GPL license       /
+// a copy of which has been included with this distribution in the license.txt file.  /
+///////////////////////////////////////////////////////////////////////////////////////
+
+using System;
 using System.Linq;
 using System.Messaging;
 using System.Threading;
@@ -90,10 +97,6 @@ namespace NEsper.Catalyst.Client
                     null,
                     newEvents,
                     oldEvents);
-
-                // send the event(s) along
-                _eventHandler.Invoke(
-                    null, updateEventArgs);
             } catch(MessageQueueException) {
             } catch(NullReferenceException) {
             } finally {

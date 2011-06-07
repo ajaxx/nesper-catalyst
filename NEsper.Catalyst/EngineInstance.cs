@@ -1,13 +1,25 @@
-﻿using System;
+﻿///////////////////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2011 Patchwork Consulting. All rights reserved.                      /
+// ---------------------------------------------------------------------------------- /
+// The software in this package is published under the terms of the GPL license       /
+// a copy of which has been included with this distribution in the license.txt file.  /
+///////////////////////////////////////////////////////////////////////////////////////
+
+using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Xml.Linq;
+
 using com.espertech.esper.client.soda;
+using com.espertech.esper.compat.logging;
 using com.espertech.esper.events;
-using NEsper.Catalyst.Common;
 
 namespace NEsper.Catalyst
 {
+    using Common;
+    using Configuration;
+
     using com.espertech.esper.client;
 
     class EngineInstance : IEngineInstance
@@ -38,7 +50,7 @@ namespace NEsper.Catalyst
         /// <summary>
         /// Event publisher factory for this instance.
         /// </summary>
-        private readonly IEventPublisherFactory _eventPublisherFactory;
+        private readonly IEnumerable<IEventPublisherFactory> _eventPublisherFactories;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EngineInstance"/> class.
@@ -47,12 +59,26 @@ namespace NEsper.Catalyst
         {
             Id = Guid.NewGuid().ToString();
 
+            var appConfiguration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            var catConfiguration = appConfiguration.Sections.OfType<CatalystConfiguration>().FirstOrDefault();
+            if (catConfiguration == null) {
+                Log.Warn("catalyst configuration section was not found");
+            }
+
             // create the service instance
-            var serviceConfiguration = new Configuration();
+            var serviceConfiguration = new com.espertech.esper.client.Configuration();
             ServiceProvider = EPServiceProviderManager.GetDefaultProvider(serviceConfiguration);
 
-            _eventPublisherFactory = new MsmqEventPublisherFactory(
-                string.Format(@".\private$\esper_{0}", Id));
+            if ((catConfiguration != null) && (catConfiguration.Publishers != null)) {
+                _eventPublisherFactories = catConfiguration.Publishers.OfType<PublisherElement>()
+                    .Select(GetEventPublisherFactory)
+                    .ToList();
+            } else {
+                _eventPublisherFactories = new List<IEventPublisherFactory>
+                    {
+                        new MsmqEventPublisherFactory(string.Format(@".\private$\esper_{0}", Id))
+                    };
+            }
         }
 
         /// <summary>
@@ -61,6 +87,24 @@ namespace NEsper.Catalyst
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
+        }
+
+        /// <summary>
+        /// Gets the event publisher.
+        /// </summary>
+        /// <param name="publisherElement">The publisher element.</param>
+        /// <returns></returns>
+        public static IEventPublisherFactory GetEventPublisherFactory(PublisherElement publisherElement)
+        {
+            switch (publisherElement.Type.ToLower())
+            {
+                case "msmq":
+                    return new MsmqEventPublisherFactory(publisherElement.Attributes);
+                case "rabbitmq":
+                    return new RabbitMqEventPublisherFactory(publisherElement.Attributes);
+            }
+
+            throw new ConfigurationErrorsException(string.Format("invalid publisher \"{0}\"", publisherElement));
         }
 
         /// <summary>
@@ -107,15 +151,15 @@ namespace NEsper.Catalyst
                 creationArgs.StatementName,
                 statementDescriptor);
 
-            var publisher = _eventPublisherFactory.CreatePublisher(
-                new EventPublisherArgs(ServiceProvider.EPRuntime, statement));
+            var publishers = _eventPublisherFactories
+                .Select(factory => factory.CreatePublisher(new EventPublisherArgs(ServiceProvider.EPRuntime, statement)));
 
             if (StatementCreated != null) {
                 StatementCreated(this, new StatementCreationEventArgs(this, statement));
             }
 
             statementDescriptor.Id = statement.Name;
-            statementDescriptor.URI = publisher.URI.ToString();
+            statementDescriptor.URIs = publishers.Select(publisher => publisher.URI.ToString()).ToArray();
             return statementDescriptor;
         }
 
@@ -133,15 +177,15 @@ namespace NEsper.Catalyst
                 creationArgs.StatementName,
                 statementDescriptor);
 
-            var publisher = _eventPublisherFactory.CreatePublisher(
-                new EventPublisherArgs(ServiceProvider.EPRuntime, statement));
+            var publishers = _eventPublisherFactories
+                .Select(factory => factory.CreatePublisher(new EventPublisherArgs(ServiceProvider.EPRuntime, statement)));
 
             if (StatementCreated != null) {
                 StatementCreated(this, new StatementCreationEventArgs(this, statement));
             }
 
             statementDescriptor.Id = statement.Name;
-            statementDescriptor.URI = publisher.URI.ToString();
+            statementDescriptor.URIs = publishers.Select(publisher => publisher.URI.ToString()).ToArray();
             return statementDescriptor;
         }
 
@@ -193,5 +237,8 @@ namespace NEsper.Catalyst
                 runtime.SendEvent(@event);
             }
         }
+
+        private static readonly ILog Log =
+            LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
     }
 }

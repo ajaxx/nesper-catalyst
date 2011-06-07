@@ -1,4 +1,11 @@
-﻿using System;
+﻿///////////////////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2011 Patchwork Consulting. All rights reserved.                      /
+// ---------------------------------------------------------------------------------- /
+// The software in this package is published under the terms of the GPL license       /
+// a copy of which has been included with this distribution in the license.txt file.  /
+///////////////////////////////////////////////////////////////////////////////////////
+
+using System;
 using System.Collections.Generic;
 using System.ServiceModel;
 using System.ServiceModel.Web;
@@ -11,20 +18,23 @@ namespace NEsper.Catalyst.Client
     {
         private readonly WebChannelFactory<IControlManager> _webChannelFactory;
         private readonly IDictionary<string, CatalystInstance> _instanceTable;
-        private readonly IEventConsumerFactory _masterConsumerFactory;
+        private readonly DispatchEventConsumerFactory _masterConsumerFactory;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Catalyst"/> class.
         /// </summary>
-        /// <param name="managerUri">The instance URI.</param>
-        public Catalyst(Uri managerUri)
+        /// <param name="managerUri">The manager URI.</param>
+        /// <param name="consumerFactories">The consumer factories.</param>
+        public Catalyst(Uri managerUri, params IEventConsumerFactory[] consumerFactories)
         {
             var webChannelBinding = new WebHttpBinding();
             _webChannelFactory = new WebChannelFactory<IControlManager>(webChannelBinding, managerUri);
             _instanceTable = new Dictionary<string, CatalystInstance>();
 
             var dispatchConsumerFactory = new DispatchEventConsumerFactory();
-            dispatchConsumerFactory.Factories.Add(new MsmqEventConsumerFactory());
+            foreach (var consumerFactory in consumerFactories) {
+                dispatchConsumerFactory.Factories.Add(consumerFactory);
+            }
 
             _masterConsumerFactory = dispatchConsumerFactory;
         }
@@ -39,10 +49,20 @@ namespace NEsper.Catalyst.Client
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="Catalyst"/> class.
+        /// </summary>
+        /// <param name="managerUri">The manager URI.</param>
+        /// <param name="consumerFactories">The consumer factories.</param>
+        public Catalyst(string managerUri, params IEventConsumerFactory[] consumerFactories)
+            : this(new Uri(managerUri), consumerFactories)
+        {
+        }
+
+        /// <summary>
         /// Gets the master consumer factory.
         /// </summary>
         /// <value>The master consumer factory.</value>
-        internal IEventConsumerFactory EventConsumerFactory
+        internal DispatchEventConsumerFactory EventConsumerFactory
         {
             get { return _masterConsumerFactory; }
         }

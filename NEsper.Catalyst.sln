@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NEsper", "NEsper", "{95E9EDF6-03F2-4AA3-A218-ACDAEFA0C2E8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CGLib", "..\NEsper-4.1\CGLib\CGLib.csproj", "{C05D6633-77BF-4985-80F9-EE4F03BAC83E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CGLib", "..\NEsper\CGLib\CGLib.csproj", "{C05D6633-77BF-4985-80F9-EE4F03BAC83E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NEsper", "..\NEsper-4.1\NEsper\NEsper\NEsper.csproj", "{8376DC7A-06AC-40F1-9338-9AC5AF788356}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NEsper", "..\NEsper\NEsper\NEsper\NEsper.csproj", "{8376DC7A-06AC-40F1-9338-9AC5AF788356}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NEsper.Runtime", "..\NEsper-4.1\NEsper\NEsper.Runtime\NEsper.Runtime.csproj", "{D7A8B523-B181-4954-B32B-2E1EEB42989A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NEsper.Runtime", "..\NEsper\NEsper\NEsper.Runtime\NEsper.Runtime.csproj", "{D7A8B523-B181-4954-B32B-2E1EEB42989A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NEsper.Catalyst", "NEsper.Catalyst", "{C9887B49-E1D0-4086-ADB7-643A845F0FEA}"
 EndProject

@@ -1,0 +1,8 @@
+Package: NEsper.Catalyst
+Version: 0.9
+Date: 06-06-2011
+Title: NEsper Catalyst Engine
+Author: Aaron Jackson <crackajaxx@codehaus.org>
+Maintainer: Aaron Jackson <crackajaxx@codehaus.org>
+Description: Standalone event processing engine
+License: GPL (>= 2.0)
