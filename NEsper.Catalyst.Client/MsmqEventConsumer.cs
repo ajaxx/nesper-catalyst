@@ -6,13 +6,10 @@
 ///////////////////////////////////////////////////////////////////////////////////////
 
 using System;
-using System.Linq;
 using System.Messaging;
 using System.Threading;
-using System.Xml.Linq;
 
 using com.espertech.esper.client;
-using com.espertech.esper.events.xml;
 
 namespace NEsper.Catalyst.Client
 {
@@ -76,27 +73,9 @@ namespace NEsper.Catalyst.Client
                 _messageQueue.EndReceive(e.AsyncResult);
                 // receive the current message
                 var message = e.Message;
-                // process the message
-                var eventElement = XElement.Parse((string) message.Body);
-                // find the xelements that represent the old and new event beans
-                // and convert them back into an eventBean form
-                var oldEvents = eventElement
-                    .Element(XName.Get("old"))
-                    .Elements()
-                    .Select(element => new XEventBean(element, null))
-                    .ToArray();
-                var newEvents = eventElement
-                    .Element(XName.Get("new"))
-                    .Elements()
-                    .Select(element => new XEventBean(element, null))
-                    .ToArray();
-
-                // construct event args
-                var updateEventArgs = new UpdateEventArgs(
-                    null,
-                    null,
-                    newEvents,
-                    oldEvents);
+                var eventArgs = ((string) message.Body).ToUpdateEventArgs();
+                // send the event(s) along
+                _eventHandler.Invoke(null, eventArgs);
             } catch(MessageQueueException) {
             } catch(NullReferenceException) {
             } finally {

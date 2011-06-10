@@ -89,5 +89,12 @@ namespace NEsper.Catalyst
         /// </summary>
         /// <param name="event">The @event.</param>
         void SendEvent(XElement @event);
+
+        /// <summary>
+        /// Sends the event.
+        /// </summary>
+        /// <param name="map">The map.</param>
+        /// <param name="eventTypeName">Name of the event type.</param>
+        void SendEvent(IDictionary<string, object> map, string eventTypeName);
     }
 }

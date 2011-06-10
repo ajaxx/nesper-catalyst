@@ -9,19 +9,20 @@ using com.espertech.esper.client;
 
 namespace NEsper.Catalyst.Client
 {
-    public class CatalystInstance
+    public class CatalystInstance 
+        : ICatalystInstance
     {
         /// <summary>
         /// Gets or sets the catalyst adapter.
         /// </summary>
         /// <value>The catalyst adapter.</value>
-        public Catalyst Adapter { get; private set; }
+        public ICatalyst Adapter { get; private set; }
 
         /// <summary>
-        /// Gets the admininstrator.
+        /// Gets the administrator.
         /// </summary>
-        /// <value>The admininstrator.</value>
-        public EPAdministrator Admininstrator { get; private set; }
+        /// <value>The administrator.</value>
+        public ICatalystAdministrator Administrator { get; private set; }
 
         /// <summary>
         /// Gets the runtime.
@@ -37,7 +38,7 @@ namespace NEsper.Catalyst.Client
         public CatalystInstance(Catalyst adapter, string instanceId)
         {
             Adapter = adapter;
-            Admininstrator = new CatalystAdministrator(adapter, instanceId);
+            Administrator = new CatalystAdministrator(adapter, instanceId);
             Runtime = new CatalystRuntime(adapter, instanceId);
         }
     }

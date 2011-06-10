@@ -14,13 +14,13 @@ using com.espertech.esper.client;
 using com.espertech.esper.client.deploy;
 using com.espertech.esper.client.soda;
 using com.espertech.esper.compat;
-
+using com.espertech.esper.util;
 using NEsper.Catalyst.Common;
 
 namespace NEsper.Catalyst.Client
 {
     public class CatalystAdministrator
-        : EPAdministrator
+        : ICatalystAdministrator
     {
         private readonly Catalyst _adapter;
         private readonly IDictionary<string, WeakReference<CatalystStatement>> _statementTable;
@@ -47,6 +47,76 @@ namespace NEsper.Catalyst.Client
         private ChannelWrapper<IControlManager> CreateControlManager()
         {
             return new ChannelWrapper<IControlManager>(_webChannelFactory.CreateChannel());
+        }
+
+        /// <summary>
+        /// Sanitizes the type map.
+        /// </summary>
+        /// <param name="typeMap">The type map.</param>
+        /// <returns></returns>
+        private IEnumerable<EventTypeAtom> ToEventTypeAtoms(IEnumerable<KeyValuePair<string, object>> typeMap)
+        {
+            foreach (var entry in typeMap) {
+                var name = entry.Key;
+                var type = entry.Value;
+                if (type is Type) {
+                    var asType = (Type) type;
+                    if (asType.IsBuiltinDataType()) {
+                        var eventTypeAtom = new EventTypeAtom();
+                        eventTypeAtom.Name = name;
+                        eventTypeAtom.TypeName = asType.FullName;
+                        yield return eventTypeAtom;
+                    }
+                }
+                else if (type is IDictionary<string, object>) {
+                    var asDictionary = (IDictionary<string, object>) type;
+                    var eventTypeAtom = new EventTypeAtom();
+                    eventTypeAtom.Name = name;
+                    eventTypeAtom.TypeDecl = ToEventTypeAtoms(asDictionary).ToArray();
+                    yield return eventTypeAtom;
+                }
+                else {
+                    throw new ArgumentException("inavlid typeMap");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Adds the type of the event.
+        /// </summary>
+        /// <param name="eventTypeName">Name of the event type.</param>
+        /// <param name="typeMap">The type map.</param>
+        public void AddEventType(string eventTypeName, IDictionary<string, object> typeMap)
+        {
+            var eventTypeAtoms = ToEventTypeAtoms(typeMap);
+
+            using (var wrapper = CreateControlManager())
+            {
+                var controlManager = wrapper.Channel;
+                var eventTypeDefinition = new EventTypeDefinition(
+                    eventTypeName, eventTypeAtoms.ToArray());
+                controlManager.AddEventType(_instanceId, eventTypeDefinition);
+            }
+        }
+
+        /// <summary>
+        /// Adds the type of the event.
+        /// </summary>
+        /// <param name="eventTypeName">Name of the event type.</param>
+        /// <param name="typeMap">The type map.</param>
+        /// <param name="superTypes">The super types.</param>
+        public void AddEventType(string eventTypeName, IDictionary<string, object> typeMap, params string[] superTypes)
+        {
+            var eventTypeAtoms = ToEventTypeAtoms(typeMap);
+            var superTypeArray = superTypes != null ? superTypes.ToArray() : null;
+
+            using (var wrapper = CreateControlManager())
+            {
+                var controlManager = wrapper.Channel;
+                var eventTypeDefinition = new EventTypeDefinition(
+                    eventTypeName, eventTypeAtoms.ToArray(), superTypeArray);
+                controlManager.AddEventType(_instanceId, eventTypeDefinition);
+            }
         }
 
         /// <summary>

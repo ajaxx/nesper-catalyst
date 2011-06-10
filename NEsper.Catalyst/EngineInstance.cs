@@ -216,6 +216,17 @@ namespace NEsper.Catalyst
         }
 
         /// <summary>
+        /// Sends the event.
+        /// </summary>
+        /// <param name="map">The map.</param>
+        /// <param name="eventTypeName">Name of the event type.</param>
+        public void SendEvent(IDictionary<string, object> map, string eventTypeName)
+        {
+            var runtime = ServiceProvider.EPRuntime;
+            runtime.SendEvent(map, eventTypeName);
+        }
+
+        /// <summary>
         /// Sends an event.
         /// </summary>
         /// <param name="event">The @event.</param>

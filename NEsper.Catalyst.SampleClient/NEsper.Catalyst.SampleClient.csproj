@@ -110,7 +110,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Consumer.cs" />
-    <Compile Include="Injector.cs" />
+    <Compile Include="InjectNative.cs" />
+    <Compile Include="InjectSynthetic.cs" />
     <Compile Include="MarketDataEvent.cs" />
     <Compile Include="MarketDataGenerator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

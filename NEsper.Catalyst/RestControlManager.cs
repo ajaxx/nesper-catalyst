@@ -6,6 +6,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Runtime.Serialization.Json;
@@ -17,6 +18,7 @@ using System.Xml.Linq;
 using com.espertech.esper.client;
 using com.espertech.esper.client.soda;
 using com.espertech.esper.compat.logging;
+using com.espertech.esper.util;
 
 namespace NEsper.Catalyst
 {
@@ -294,6 +296,23 @@ namespace NEsper.Catalyst
         /// </summary>
         /// <param name="instanceId">The instance id.</param>
         /// <param name="event">The @event.</param>
+        public void SendMapEvent(string instanceId, MapEvent @event)
+        {
+            try {
+                var instance = GetInstanceOrFault(instanceId);
+                var dictionary = @event.Atoms.ToDictionary();
+                instance.SendEvent(dictionary, @event.Name);
+            }
+            catch (EPException e) {
+                throw new WebFaultException<Exception>(e, HttpStatusCode.BadRequest);
+            }
+        }
+
+        /// <summary>
+        /// Sends an event into the instance.
+        /// </summary>
+        /// <param name="instanceId">The instance id.</param>
+        /// <param name="event">The @event.</param>
         public void SendXmlEvent(string instanceId, XElement @event)
         {
             try {
@@ -347,6 +366,41 @@ namespace NEsper.Catalyst
             var instance = GetInstanceOrFault(instanceId);
             var statistics = new InstanceStatistics();
             return statistics;
+        }
+
+        /// <summary>
+        /// Converts the atoms into a type map.
+        /// </summary>
+        /// <param name="atoms">The atoms.</param>
+        /// <returns></returns>
+        private IDictionary<string, object> ToTypeMap(IEnumerable<EventTypeAtom> atoms)
+        {
+            var typeMap = new Dictionary<string, object>();
+            foreach(var atom in atoms) {
+                if (atom.TypeName != null) {
+                    typeMap[atom.Name] = TypeHelper.ResolveType(atom.TypeName);
+                } else if (atom.TypeDecl != null) {
+                    typeMap[atom.Name] = ToTypeMap(atom.TypeDecl);
+                } else {
+                    throw new ArgumentException("invalid event type atoms");
+                }
+            }
+
+            return typeMap;
+        }
+
+        /// <summary>
+        /// Adds the type of the event.
+        /// </summary>
+        /// <param name="instanceId">The instance id.</param>
+        /// <param name="eventTypeDefinition">The event type definition.</param>
+        public void AddEventType(string instanceId, EventTypeDefinition eventTypeDefinition)
+        {
+            var instance = GetInstanceOrFault(instanceId);
+            var typeMap = ToTypeMap(eventTypeDefinition.TypeMap);
+            instance.ServiceProvider.EPAdministrator
+                .GetConfiguration()
+                .AddEventType(eventTypeDefinition.Name, typeMap);
         }
 
         #endregion

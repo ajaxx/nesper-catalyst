@@ -6,13 +6,15 @@
 ///////////////////////////////////////////////////////////////////////////////////////
 
 using System;
+using System.Collections.Generic;
 using System.Threading;
+using com.espertech.esper.compat;
 
 namespace NEsper.Catalyst.SampleClient
 {
     using Client;
 
-    class Injector
+    class InjectNative
     {
         /// <summary>
         /// Catalyst instance
@@ -30,10 +32,10 @@ namespace NEsper.Catalyst.SampleClient
         private readonly ManualResetEvent _sendIndicator;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Injector"/> class.
+        /// Initializes a new instance of the <see cref="InjectSynthetic"/> class.
         /// </summary>
         /// <param name="instance">The instance.</param>
-        public Injector(CatalystInstance instance)
+        public InjectNative(CatalystInstance instance)
         {
             _instance = instance;
             _marketDataGenerator = new MarketDataGenerator();
@@ -55,15 +57,16 @@ namespace NEsper.Catalyst.SampleClient
         private void SendEvents()
         {
             var instanceRuntime = _instance.Runtime;
+            var marketData = _marketDataGenerator.GetEnumerator();
 
             Console.Out.WriteLine("Sending events ...");
             // send the first event
-            instanceRuntime.SendEvent(_marketDataGenerator.NextEvent());
+            instanceRuntime.SendEvent(marketData.Advance());
             // mark the reset event so that notifications go out
             _sendIndicator.Set();
             // send the rest of the events
             for( int ii = 0 ;; ii++ ) {
-                instanceRuntime.SendEvent(_marketDataGenerator.NextEvent());
+                instanceRuntime.SendEvent(marketData.Advance());
                 if (( ii % 1000 ) == 0 ) {
                     Console.Out.Write('.');
                     Console.Out.Flush();

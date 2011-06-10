@@ -118,6 +118,9 @@
     <Compile Include="CatalystStatement.cs" />
     <Compile Include="ChannelWrapper.cs" />
     <Compile Include="DispatchEventConsumerFactory.cs" />
+    <Compile Include="ICatalyst.cs" />
+    <Compile Include="ICatalystAdministrator.cs" />
+    <Compile Include="ICatalystInstance.cs" />
     <Compile Include="IEventConsumerFactory.cs" />
     <Compile Include="MessageExtensions.cs" />
     <Compile Include="MsmqEventConsumer.cs" />

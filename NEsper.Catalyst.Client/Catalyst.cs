@@ -14,7 +14,7 @@ namespace NEsper.Catalyst.Client
 {
     using Common;
 
-    public class Catalyst
+    public class Catalyst : ICatalyst
     {
         private readonly WebChannelFactory<IControlManager> _webChannelFactory;
         private readonly IDictionary<string, CatalystInstance> _instanceTable;

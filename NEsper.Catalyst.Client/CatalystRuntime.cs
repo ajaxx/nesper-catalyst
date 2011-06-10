@@ -145,7 +145,9 @@ namespace NEsper.Catalyst.Client
         /// <throws>EPException - when the processing of the event leads to an error</throws>
         public void SendEvent(IDictionary<string, object> map, string eventTypeName)
         {
-            throw new NotImplementedException();
+            var mapEvent = new MapEvent(eventTypeName, map);
+            var controlManager = GetControlManager();
+            controlManager.SendMapEvent(_instanceId, mapEvent);
         }
 
         /// <summary>
@@ -202,7 +204,8 @@ namespace NEsper.Catalyst.Client
         /// the routed event is processed before the next event is sent to the runtime through
         /// the EPRuntime.SendEvent method.
         /// </summary>
-        /// <param name="map">map that contains event property values. Keys are expected to be of type string while valuescan be of any type. Keys and values should match those declared via Configuration for the given eventTypeName. </param>
+        /// <param name="map">map that contains event property values. Keys are expected to be of type string while values
+        /// can be of any type. Keys and values should match those declared via Configuration for the given eventTypeName.</param>
         /// <param name="eventTypeName">the name for Map event type that was previously configured</param>
         /// <throws>EPException - when the processing of the event leads to an error</throws>
         public void Route(IDictionary<string, object> map, string eventTypeName)

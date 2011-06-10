@@ -5,6 +5,8 @@
 // a copy of which has been included with this distribution in the license.txt file.  /
 ///////////////////////////////////////////////////////////////////////////////////////
 
+using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.ServiceModel;
 using System.ServiceModel.Web;
@@ -127,6 +129,15 @@ namespace NEsper.Catalyst.Common
         /// <param name="instanceId">The instance id.</param>
         /// <param name="event">The @event.</param>
         [OperationContract]
+        [WebInvoke(UriTemplate = "/instance/{instanceId}/event/map", Method = "PUT")]
+        void SendMapEvent(string instanceId, MapEvent @event);
+
+        /// <summary>
+        /// Sends an event into the instance.
+        /// </summary>
+        /// <param name="instanceId">The instance id.</param>
+        /// <param name="event">The @event.</param>
+        [OperationContract]
         [WebInvoke(UriTemplate = "/instance/{instanceId}/event/xml", Method = "PUT")]
         void SendXmlEvent(string instanceId, XElement @event);
 
@@ -138,6 +149,15 @@ namespace NEsper.Catalyst.Common
         [OperationContract]
         [WebInvoke(UriTemplate = "/instance/{instanceId}/event/json", Method = "PUT")]
         void SendJsonEvent(string instanceId, JsonEventArgs eventArgs);
+
+        /// <summary>
+        /// Adds the type of the event.
+        /// </summary>
+        /// <param name="instanceId">The instance id.</param>
+        /// <param name="eventTypeDefinition">The event type definition.</param>
+        [OperationContract]
+        [WebInvoke(UriTemplate = "/instance/{instanceId}/eventType/add", Method = "PUT")]
+        void AddEventType(string instanceId, EventTypeDefinition eventTypeDefinition);
         #endregion
 
         #region Statistics
@@ -159,6 +179,89 @@ namespace NEsper.Catalyst.Common
         [WebGet(UriTemplate = "/statistics/{instanceId}")]
         InstanceStatistics GetInstanceStatistics(string instanceId);
         #endregion
+    }
+
+    [DataContract(
+        Namespace = "http://www.patchwork-consulting.org",
+        Name = "EventTypeDefinition")]
+    public class EventTypeDefinition
+    {
+        /// <summary>
+        /// Gets or sets the name.
+        /// </summary>
+        /// <value>The name.</value>
+        [DataMember]
+        public string Name { get; set; }
+
+        /// <summary>
+        /// Gets or sets the type map.
+        /// </summary>
+        /// <value>The type map.</value>
+        [DataMember]
+        public EventTypeAtom[] TypeMap { get; set; }
+
+        /// <summary>
+        /// Gets or sets the super types.
+        /// </summary>
+        /// <value>The super types.</value>
+        [DataMember]
+        public string[] SuperTypes { get; set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EventTypeDefinition"/> class.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <param name="typeMap">The type map.</param>
+        public EventTypeDefinition(string name, EventTypeAtom[] typeMap)
+        {
+            Name = name;
+            TypeMap = typeMap;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EventTypeDefinition"/> class.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <param name="typeMap">The type map.</param>
+        /// <param name="superTypes">The super types.</param>
+        public EventTypeDefinition(string name, EventTypeAtom[] typeMap, string[] superTypes)
+        {
+            Name = name;
+            TypeMap = typeMap;
+            SuperTypes = superTypes;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EventTypeDefinition"/> class.
+        /// </summary>
+        public EventTypeDefinition()
+        {
+        }
+    }
+
+    [DataContract(
+        Namespace = "http://www.patchwork-consulting.org",
+        Name = "EventTypeAtom")]
+    public class EventTypeAtom
+    {
+        /// <summary>
+        /// Gets or sets the name.
+        /// </summary>
+        /// <value>The name.</value>
+        [DataMember]
+        public string Name { get; set; }
+        /// <summary>
+        /// Gets or sets the name of the type.
+        /// </summary>
+        /// <value>The name of the type.</value>
+        [DataMember]
+        public string TypeName { get; set; }
+        /// <summary>
+        /// Gets or sets the type declaration.
+        /// </summary>
+        /// <value>The type decl.</value>
+        [DataMember]
+        public EventTypeAtom[] TypeDecl { get; set; }
     }
 
     [DataContract(

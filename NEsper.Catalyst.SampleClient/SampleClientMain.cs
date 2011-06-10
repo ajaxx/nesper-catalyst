@@ -24,12 +24,12 @@ namespace NEsper.Catalyst.SampleClient
             var instance = adapter.GetDefaultInstance();
             // create an injector ... the purpose of the injector is to ensure that
             // events exist and are flowing through the system.
-            var injector = new Injector(instance);
+            var injector = new InjectSynthetic(instance);
             injector.Start();
             injector.WaitOne();
             // create a consumer ... the purpose of the consumer is to demonstrate
             // how to setup statements and consume event flow from the engine.
-            var consumer = new Consumer(instance);
+            var consumer = new Consumer(instance, "SyntheticEvent");
             consumer.Start();
         }
     }
