@@ -7,7 +7,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Runtime.Serialization;
+using System.ServiceModel;
 using System.ServiceModel.Web;
 
 using com.espertech.esper.client;
@@ -15,6 +19,7 @@ using com.espertech.esper.client.deploy;
 using com.espertech.esper.client.soda;
 using com.espertech.esper.compat;
 using com.espertech.esper.util;
+
 using NEsper.Catalyst.Common;
 
 namespace NEsper.Catalyst.Client
@@ -159,6 +164,28 @@ namespace NEsper.Catalyst.Client
         {
             lock(_statementTable) {
                 _statementTable[statement.Id] = new WeakReference<CatalystStatement>(statement);
+            }
+        }
+
+        private void HandleProtocolException(ProtocolException e)
+        {
+            var serializer = new DataContractSerializer(typeof (string));
+            var webException = e.InnerException as WebException;
+            if (webException != null)
+            {
+                var httpWebResponse = webException.Response as HttpWebResponse;
+                if (httpWebResponse != null)
+                {
+                    switch(httpWebResponse.StatusCode)
+                    {
+                        case HttpStatusCode.BadRequest:
+                            throw new EPException(
+                                (string) serializer.ReadObject(httpWebResponse.GetResponseStream()));
+                        case HttpStatusCode.Unauthorized:
+                            throw new UnauthorizedAccessException(
+                                (string)serializer.ReadObject(httpWebResponse.GetResponseStream()));
+                    }
+                }
             }
         }
 
@@ -307,15 +334,23 @@ namespace NEsper.Catalyst.Client
         {
             using (var wrapper = CreateControlManager())
             {
-                var controlManager = wrapper.Channel;
-                var statementArgs = new StatementCreationArgs();
-                statementArgs.StatementText = eplStatement;
+                try
+                {
+                    var controlManager = wrapper.Channel;
+                    var statementArgs = new StatementCreationArgs();
+                    statementArgs.StatementText = eplStatement;
 
-                var statement = controlManager.CreateEPL(_instanceId, statementArgs);
-                var statementWrapper = new CatalystStatement(_adapter, statement);
-                BindStatement(statementWrapper);
+                    var statement = controlManager.CreateEPL(_instanceId, statementArgs);
+                    var statementWrapper = new CatalystStatement(_adapter, statement);
+                    BindStatement(statementWrapper);
 
-                return statementWrapper;
+                    return statementWrapper;
+                } 
+                catch( ProtocolException e )
+                {
+                    HandleProtocolException(e);
+                    throw;
+                }
             }
         }
 
@@ -336,16 +371,24 @@ namespace NEsper.Catalyst.Client
         {
             using (var wrapper = CreateControlManager())
             {
-                var controlManager = wrapper.Channel;
-                var statementArgs = new StatementCreationArgs();
-                statementArgs.StatementText = eplStatement;
-                statementArgs.StatementName = statementName;
+                try
+                {
+                    var controlManager = wrapper.Channel;
+                    var statementArgs = new StatementCreationArgs();
+                    statementArgs.StatementText = eplStatement;
+                    statementArgs.StatementName = statementName;
 
-                var statement = controlManager.CreateEPL(_instanceId, statementArgs);
-                var statementWrapper = new CatalystStatement(_adapter, statement);
-                BindStatement(statementWrapper);
+                    var statement = controlManager.CreateEPL(_instanceId, statementArgs);
+                    var statementWrapper = new CatalystStatement(_adapter, statement);
+                    BindStatement(statementWrapper);
 
-                return statementWrapper;
+                    return statementWrapper;
+                }
+                catch (ProtocolException e)
+                {
+                    HandleProtocolException(e);
+                    throw;
+                }
             }
         }
 

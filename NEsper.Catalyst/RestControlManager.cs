@@ -65,13 +65,14 @@ namespace NEsper.Catalyst
             serviceBehavior.AutomaticFormatSelectionEnabled = true;
             serviceBehavior.DefaultBodyStyle = WebMessageBodyStyle.Bare;
             serviceBehavior.HelpEnabled = true;
-            serviceBehavior.FaultExceptionEnabled = true;
+            serviceBehavior.FaultExceptionEnabled = false;
             serviceBehavior.DefaultOutgoingRequestFormat = WebMessageFormat.Json;
             serviceBehavior.DefaultOutgoingResponseFormat = WebMessageFormat.Json;
 
             var serviceBinding = new WebHttpBinding();
             var serviceEndpoint = _serviceHost.AddServiceEndpoint(typeof(IControlManager), serviceBinding, "");
             serviceEndpoint.Behaviors.Add(serviceBehavior);
+
 
             _serviceHost.BeginOpen(HandleAsyncOpen, null);
         }
@@ -231,7 +232,7 @@ namespace NEsper.Catalyst
 
             throw new WebFaultException(HttpStatusCode.NotFound);
         }
-
+        
         /// <summary>
         /// Creates a statement based off the pattern that is presented.
         /// </summary>
@@ -244,7 +245,8 @@ namespace NEsper.Catalyst
                 var instance = GetInstanceOrFault(instanceId);
                 return instance.CreateEPL(statementCreationArgs);
             } catch( EPException e ) {
-                throw new WebFaultException<Exception>(e, HttpStatusCode.BadRequest);
+                Log.Warn("CreateEPL: BadRequest returned: {0}", e.Message);
+                throw new WebFaultException<string>(e.Message, HttpStatusCode.BadRequest);
             }
         }
 
@@ -261,7 +263,8 @@ namespace NEsper.Catalyst
                 return instance.CreatePattern(statementCreationArgs);
             }
             catch (EPException e) {
-                throw new WebFaultException<Exception>(e, HttpStatusCode.BadRequest);
+                Log.Warn("CreatePattern: BadRequest returned: {0}", e.Message);
+                throw new WebFaultException<string>(e.Message, HttpStatusCode.BadRequest);
             }
         }
 
@@ -278,7 +281,8 @@ namespace NEsper.Catalyst
                 return instance.Compile(creationArgs);
             }
             catch (EPException e) {
-                throw new WebFaultException<Exception>(e, HttpStatusCode.BadRequest);
+                Log.Warn("Compile: BadRequest returned: {0}", e.Message);
+                throw new WebFaultException<string>(e.Message, HttpStatusCode.BadRequest);
             }
         }
 
@@ -306,7 +310,8 @@ namespace NEsper.Catalyst
                 instance.SendEvent(dictionary, @event.Name);
             }
             catch (EPException e) {
-                throw new WebFaultException<Exception>(e, HttpStatusCode.BadRequest);
+                Log.Warn("SendMapEvent: BadRequest returned: {0}", e.Message);
+                throw new WebFaultException<string>(e.Message, HttpStatusCode.BadRequest);
             }
         }
 
@@ -322,7 +327,8 @@ namespace NEsper.Catalyst
                 instance.SendEvent(@event);
             }
             catch (EPException e) {
-                throw new WebFaultException<Exception>(e, HttpStatusCode.BadRequest);
+                Log.Warn("SendXmlEvent: BadRequest returned: {0}", e.Message);
+                throw new WebFaultException<string>(e.Message, HttpStatusCode.BadRequest);
             }
         }
 
@@ -344,7 +350,8 @@ namespace NEsper.Catalyst
                 instance.SendEvent(dictionaryDocument.Root);
             }
             catch (EPException e) {
-                throw new WebFaultException<Exception>(e, HttpStatusCode.BadRequest);
+                Log.Warn("SendJsonEvent: BadRequest returned: {0}", e.Message);
+                throw new WebFaultException<string>(e.Message, HttpStatusCode.BadRequest);
             }
         }
 

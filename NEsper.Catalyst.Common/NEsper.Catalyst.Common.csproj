@@ -114,6 +114,7 @@
     <Compile Include="InstanceCreationArgs.cs" />
     <Compile Include="InstanceDescriptor.cs" />
     <Compile Include="InstanceStatistics.cs" />
+    <Compile Include="IOExtensions.cs" />
     <Compile Include="JsonEvent.cs" />
     <Compile Include="MapEvent.cs" />
     <Compile Include="MapEventExtensions.cs" />
