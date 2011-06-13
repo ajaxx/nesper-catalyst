@@ -14,6 +14,7 @@ using System.Xml.Linq;
 using com.espertech.esper.client.soda;
 using com.espertech.esper.compat.logging;
 using com.espertech.esper.events;
+using NEsper.Catalyst.Publishers;
 
 namespace NEsper.Catalyst
 {
@@ -53,6 +54,11 @@ namespace NEsper.Catalyst
         private readonly IEnumerable<IEventPublisherFactory> _eventPublisherFactories;
 
         /// <summary>
+        /// Event consumers attached to this instance.
+        /// </summary>
+        private readonly IEnumerable<IEventConsumer> _eventConsumers;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="EngineInstance"/> class.
         /// </summary>
         public EngineInstance()
@@ -61,7 +67,8 @@ namespace NEsper.Catalyst
 
             var appConfiguration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
             var catConfiguration = appConfiguration.Sections.OfType<CatalystConfiguration>().FirstOrDefault();
-            if (catConfiguration == null) {
+            if (catConfiguration == null)
+            {
                 Log.Warn("catalyst configuration section was not found");
             }
 
@@ -69,16 +76,43 @@ namespace NEsper.Catalyst
             var serviceConfiguration = new com.espertech.esper.client.Configuration();
             ServiceProvider = EPServiceProviderManager.GetDefaultProvider(serviceConfiguration);
 
-            if ((catConfiguration != null) && (catConfiguration.Publishers != null)) {
-                _eventPublisherFactories = catConfiguration.Publishers.OfType<PublisherElement>()
-                    .Select(GetEventPublisherFactory)
-                    .ToList();
-            } else {
-                _eventPublisherFactories = new List<IEventPublisherFactory>
+            if (catConfiguration != null)
+            {
+                // consumers
+                Log.Info("EngineInstance.ctor: initializing consumers");
+                if (catConfiguration.Consumers != null)
+                {
+                    var eventConsumers = new List<IEventConsumer>();
+
+                    _eventConsumers = eventConsumers;
+                    foreach (var consumerElement in catConfiguration.Consumers.OfType<ConsumerElement>())
                     {
-                        new MsmqEventPublisherFactory(string.Format(@".\private$\esper_{0}", Id))
-                    };
+                        var eventConsumer = consumerElement.CreateConsumer();
+                        eventConsumer.XmlEvent += SendEvent;
+                        eventConsumer.DictionaryEvent += (name, @event) => SendEvent(@event, name);
+                        eventConsumers.Add(eventConsumer);
+                    }
+                }
+
+                // publishers
+                Log.Info("EngineInstance.ctor: initializing publishers");
+                if (catConfiguration.Publishers != null)
+                {
+                    _eventPublisherFactories = catConfiguration.Publishers.OfType<PublisherElement>()
+                        .Select(publisherElement => publisherElement.CreatePublisherFactory())
+                        .ToList();
+                }
+                else
+                {
+                    _eventPublisherFactories = new List<IEventPublisherFactory>
+                                                   {
+                                                       new MsmqEventPublisherFactory(
+                                                           string.Format(@".\private$\esper_{0}", Id))
+                                                   };
+                }
             }
+
+            Log.Info("EngineInstance.ctor: finished");
         }
 
         /// <summary>
@@ -87,24 +121,6 @@ namespace NEsper.Catalyst
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
-        }
-
-        /// <summary>
-        /// Gets the event publisher.
-        /// </summary>
-        /// <param name="publisherElement">The publisher element.</param>
-        /// <returns></returns>
-        public static IEventPublisherFactory GetEventPublisherFactory(PublisherElement publisherElement)
-        {
-            switch (publisherElement.Type.ToLower())
-            {
-                case "msmq":
-                    return new MsmqEventPublisherFactory(publisherElement.Attributes);
-                case "rabbitmq":
-                    return new RabbitMqEventPublisherFactory(publisherElement.Attributes);
-            }
-
-            throw new ConfigurationErrorsException(string.Format("invalid publisher \"{0}\"", publisherElement));
         }
 
         /// <summary>

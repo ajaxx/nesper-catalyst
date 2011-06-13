@@ -5,12 +5,20 @@
 // a copy of which has been included with this distribution in the license.txt file.  /
 ///////////////////////////////////////////////////////////////////////////////////////
 
+using System.Xml.Linq;
+
 namespace NEsper.Catalyst
 {
     using com.espertech.esper.client;
 
     public interface IEventPublisherFactory
     {
+        /// <summary>
+        /// Initializes the specified publisher configuration.
+        /// </summary>
+        /// <param name="publisherConfiguration">The publisher configuration.</param>
+        void Initialize(XElement publisherConfiguration);
+
         /// <summary>
         /// Creates an event publisher.
         /// </summary>

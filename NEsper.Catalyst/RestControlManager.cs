@@ -11,10 +11,12 @@ using System.Linq;
 using System.Net;
 using System.Runtime.Serialization.Json;
 using System.ServiceModel;
+using System.ServiceModel.Activation;
 using System.ServiceModel.Description;
 using System.ServiceModel.Web;
 using System.Xml;
 using System.Xml.Linq;
+
 using com.espertech.esper.client;
 using com.espertech.esper.client.soda;
 using com.espertech.esper.compat.logging;
@@ -55,7 +57,7 @@ namespace NEsper.Catalyst
         /// <summary>
         /// Opens this instance.
         /// </summary>
-        public void Open(Uri serviceUri) 
+        public void Open(Uri serviceUri)
         {
             _serviceHost = new WebServiceHost(this, serviceUri);
 
@@ -328,16 +330,16 @@ namespace NEsper.Catalyst
         /// Sends an event into the instance.
         /// </summary>
         /// <param name="instanceId">The instance id.</param>
-        /// <param name="eventArgs">The <see cref="NEsper.Catalyst.Common.JsonEventArgs"/> instance containing the event data.</param>
-        public void SendJsonEvent(string instanceId, JsonEventArgs eventArgs)
+        /// <param name="event">The <see cref="JsonEvent"/> instance containing the event data.</param>
+        public void SendJsonEvent(string instanceId, JsonEvent @event)
         {
             try {
                 var instance = GetInstanceOrFault(instanceId);
-                var eventBytes = System.Text.Encoding.UTF8.GetBytes(eventArgs.EventData);
+                var eventBytes = System.Text.Encoding.UTF8.GetBytes(@event.EventData);
                 var dictionaryReader = JsonReaderWriterFactory.CreateJsonReader(
                     eventBytes, 0, eventBytes.Length, new XmlDictionaryReaderQuotas());
                 var dictionaryDocument = XDocument.Load(dictionaryReader);
-                dictionaryDocument.Root.Name = eventArgs.EventType;
+                dictionaryDocument.Root.Name = @event.EventType;
 
                 instance.SendEvent(dictionaryDocument.Root);
             }
