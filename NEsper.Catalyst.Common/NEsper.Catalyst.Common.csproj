@@ -109,10 +109,12 @@
   <ItemGroup>
     <Compile Include="EngineStatistics.cs" />
     <Compile Include="EventExtensions.cs" />
+    <Compile Include="EventTypeDefinition.cs" />
     <Compile Include="IControlManager.cs" />
     <Compile Include="InstanceCreationArgs.cs" />
     <Compile Include="InstanceDescriptor.cs" />
     <Compile Include="InstanceStatistics.cs" />
+    <Compile Include="JsonEvent.cs" />
     <Compile Include="MapEvent.cs" />
     <Compile Include="MapEventExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

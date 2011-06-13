@@ -128,7 +128,7 @@ namespace NEsper.Catalyst.Client
         {
             var controlManager = GetControlManager();
             var serialized = SerializeJson(obj);
-            var eventArgs = new JsonEventArgs(obj.GetType().FullName, serialized);
+            var eventArgs = new JsonEvent(obj.GetType().FullName, serialized);
             controlManager.SendJsonEvent(_instanceId, eventArgs);
         }
 

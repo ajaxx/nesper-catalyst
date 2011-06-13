@@ -5,9 +5,6 @@
 // a copy of which has been included with this distribution in the license.txt file.  /
 ///////////////////////////////////////////////////////////////////////////////////////
 
-using System;
-using System.Collections.Generic;
-using System.Runtime.Serialization;
 using System.ServiceModel;
 using System.ServiceModel.Web;
 using System.Xml.Linq;
@@ -145,10 +142,10 @@ namespace NEsper.Catalyst.Common
         /// Sends an event into the instance.
         /// </summary>
         /// <param name="instanceId">The instance id.</param>
-        /// <param name="eventArgs">The <see cref="NEsper.Catalyst.Common.JsonEventArgs"/> instance containing the event data.</param>
+        /// <param name="event">The <see cref="JsonEvent"/> instance containing the event data.</param>
         [OperationContract]
         [WebInvoke(UriTemplate = "/instance/{instanceId}/event/json", Method = "PUT")]
-        void SendJsonEvent(string instanceId, JsonEventArgs eventArgs);
+        void SendJsonEvent(string instanceId, JsonEvent @event);
 
         /// <summary>
         /// Adds the type of the event.
@@ -169,7 +166,6 @@ namespace NEsper.Catalyst.Common
         [WebGet(UriTemplate = "/statistics")]
         EngineStatistics GetStatistics();
 
-
         /// <summary>
         /// Gets statistics for an instance.
         /// </summary>
@@ -179,126 +175,5 @@ namespace NEsper.Catalyst.Common
         [WebGet(UriTemplate = "/statistics/{instanceId}")]
         InstanceStatistics GetInstanceStatistics(string instanceId);
         #endregion
-    }
-
-    [DataContract(
-        Namespace = "http://www.patchwork-consulting.org",
-        Name = "EventTypeDefinition")]
-    public class EventTypeDefinition
-    {
-        /// <summary>
-        /// Gets or sets the name.
-        /// </summary>
-        /// <value>The name.</value>
-        [DataMember]
-        public string Name { get; set; }
-
-        /// <summary>
-        /// Gets or sets the type map.
-        /// </summary>
-        /// <value>The type map.</value>
-        [DataMember]
-        public EventTypeAtom[] TypeMap { get; set; }
-
-        /// <summary>
-        /// Gets or sets the super types.
-        /// </summary>
-        /// <value>The super types.</value>
-        [DataMember]
-        public string[] SuperTypes { get; set; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="EventTypeDefinition"/> class.
-        /// </summary>
-        /// <param name="name">The name.</param>
-        /// <param name="typeMap">The type map.</param>
-        public EventTypeDefinition(string name, EventTypeAtom[] typeMap)
-        {
-            Name = name;
-            TypeMap = typeMap;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="EventTypeDefinition"/> class.
-        /// </summary>
-        /// <param name="name">The name.</param>
-        /// <param name="typeMap">The type map.</param>
-        /// <param name="superTypes">The super types.</param>
-        public EventTypeDefinition(string name, EventTypeAtom[] typeMap, string[] superTypes)
-        {
-            Name = name;
-            TypeMap = typeMap;
-            SuperTypes = superTypes;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="EventTypeDefinition"/> class.
-        /// </summary>
-        public EventTypeDefinition()
-        {
-        }
-    }
-
-    [DataContract(
-        Namespace = "http://www.patchwork-consulting.org",
-        Name = "EventTypeAtom")]
-    public class EventTypeAtom
-    {
-        /// <summary>
-        /// Gets or sets the name.
-        /// </summary>
-        /// <value>The name.</value>
-        [DataMember]
-        public string Name { get; set; }
-        /// <summary>
-        /// Gets or sets the name of the type.
-        /// </summary>
-        /// <value>The name of the type.</value>
-        [DataMember]
-        public string TypeName { get; set; }
-        /// <summary>
-        /// Gets or sets the type declaration.
-        /// </summary>
-        /// <value>The type decl.</value>
-        [DataMember]
-        public EventTypeAtom[] TypeDecl { get; set; }
-    }
-
-    [DataContract(
-        Namespace = "http://www.patchwork-consulting.org",
-        Name = "JsonEvent")]
-    public class JsonEventArgs
-    {
-        /// <summary>
-        /// Gets or sets the type of the event.
-        /// </summary>
-        /// <value>The type of the event.</value>
-        [DataMember]
-        public string EventType { get; set; }
-
-        /// <summary>
-        /// Gets or sets the event data.
-        /// </summary>
-        /// <value>The event data.</value>
-        [DataMember]
-        public string EventData { get; set; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="JsonEventArgs"/> class.
-        /// </summary>
-        /// <param name="eventType">Type of the event.</param>
-        /// <param name="eventData">The event data.</param>
-        public JsonEventArgs(string eventType, string eventData)
-        {
-            EventType = eventType;
-            EventData = eventData;
-        }
-        
-        /// <summary>
-        /// Initializes a new instance of the <see cref="JsonEventArgs"/> class.
-        /// </summary>
-        public JsonEventArgs()
-        {
-        }
     }
 }

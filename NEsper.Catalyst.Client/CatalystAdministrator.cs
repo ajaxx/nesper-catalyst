@@ -75,8 +75,14 @@ namespace NEsper.Catalyst.Client
                     eventTypeAtom.TypeDecl = ToEventTypeAtoms(asDictionary).ToArray();
                     yield return eventTypeAtom;
                 }
+                else if (type is string) {
+                    var eventTypeAtom = new EventTypeAtom();
+                    eventTypeAtom.Name = name;
+                    eventTypeAtom.TypeName = (string) type;
+                    yield return eventTypeAtom;
+                }
                 else {
-                    throw new ArgumentException("inavlid typeMap");
+                    throw new ArgumentException("invalid typeMap");
                 }
             }
         }

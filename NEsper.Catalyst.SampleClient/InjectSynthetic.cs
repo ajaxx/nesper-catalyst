@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+
 using com.espertech.esper.compat;
 
 namespace NEsper.Catalyst.SampleClient
@@ -48,16 +49,17 @@ namespace NEsper.Catalyst.SampleClient
         /// </summary>
         public void Start()
         {
-            var moneyEventType = new Dictionary<string, object>();
-            moneyEventType["Amount"] = typeof (decimal);
-            moneyEventType["Currency"] = typeof (string);
+            var moneyType = new SyntheticType(
+                new SyntheticAtom<decimal>("Amount"),
+                new SyntheticAtom<string>("Currency"));
 
-            var quoteEventType = new Dictionary<string, object>();
-            quoteEventType["Symbol"] = typeof (string);
-            quoteEventType["Bid"] = moneyEventType;
-            quoteEventType["Ask"] = moneyEventType;
+            var quoteType = SyntheticType
+                .Define()
+                .Declare<string>("Symbol")
+                .Declare("Bid", moneyType)
+                .Declare("Ask", moneyType);
 
-            _instance.Administrator.AddEventType("SyntheticEvent", quoteEventType);
+            _instance.Administrator.AddEventType("SyntheticEvent", quoteType);
 
             var thread = new Thread(SendEvents) { IsBackground = false, Name = "Injector" };
             thread.Start();

@@ -62,7 +62,7 @@ namespace NEsper.Catalyst.Common
                 elementName,
                 new XElement("statement", updateEventArgs.Statement.Name),
                 ToXElement(updateEventArgs.NewEvents, "new"),
-                ToXElement(updateEventArgs.NewEvents, "old"));
+                ToXElement(updateEventArgs.OldEvents, "old"));
         }
 
         /// <summary>
