@@ -17,8 +17,6 @@ namespace NEsper.Catalyst.SampleClient
 
         public static void Main()
         {
-            Thread.Sleep(1000);
-
             // create a catalyst adapter
             var adapter = new Catalyst(
                 DEFAULT_ENGINE_URI,

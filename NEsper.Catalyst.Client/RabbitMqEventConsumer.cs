@@ -57,7 +57,7 @@ namespace NEsper.Catalyst.Client
         /// </summary>
         public void Dispose()
         {
-            if (Interlocked.CompareExchange(ref _active, 1, 0) == 0) {
+            if (Interlocked.CompareExchange(ref _active, 1, 0) == 1) {
                 _subscription.Close();
                 _subscription = null;
 

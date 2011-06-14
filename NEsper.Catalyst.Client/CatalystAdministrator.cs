@@ -6,17 +6,23 @@
 ///////////////////////////////////////////////////////////////////////////////////////
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection;
+using System.Reflection.Emit;
 using System.Runtime.Serialization;
 using System.ServiceModel;
 using System.ServiceModel.Web;
-
+using System.Xml;
+using System.Xml.Schema;
 using com.espertech.esper.client;
 using com.espertech.esper.client.deploy;
 using com.espertech.esper.client.soda;
+using com.espertech.esper.collection;
 using com.espertech.esper.compat;
 using com.espertech.esper.util;
 
@@ -90,6 +96,33 @@ namespace NEsper.Catalyst.Client
                     throw new ArgumentException("invalid typeMap");
                 }
             }
+        }
+
+        /// <summary>
+        /// Adds the type of the event.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public void AddEventType<T>()
+        {
+            AddEventType<T>(typeof (T).Name);
+        }
+
+        /// <summary>
+        /// Adds the type of the event with a specific name.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="name">The name.</param>
+        public void AddEventType<T>(string name)
+        {
+            var dataContractExporter = new XsdDataContractExporter();
+            dataContractExporter.Export(typeof (T));
+
+            SchemaFabricator.DefaultInstance.GetNativeElement(
+                dataContractExporter.Schemas,
+                dataContractExporter.GetRootElementName(typeof (T)));
+
+            Console.WriteLine("done");
+            Console.ReadLine();
         }
 
         /// <summary>
@@ -414,16 +447,24 @@ namespace NEsper.Catalyst.Client
         {
             using (var wrapper = CreateControlManager())
             {
-                var controlManager = wrapper.Channel;
-                var statementArgs = new StatementCreationArgs();
-                statementArgs.StatementText = eplStatement;
-                statementArgs.StatementName = statementName;
+                try
+                {
+                    var controlManager = wrapper.Channel;
+                    var statementArgs = new StatementCreationArgs();
+                    statementArgs.StatementText = eplStatement;
+                    statementArgs.StatementName = statementName;
 
-                var statement = controlManager.CreateEPL(_instanceId, statementArgs);
-                var statementWrapper = new CatalystStatement(_adapter, statement, userObject);
-                BindStatement(statementWrapper);
+                    var statement = controlManager.CreateEPL(_instanceId, statementArgs);
+                    var statementWrapper = new CatalystStatement(_adapter, statement, userObject);
+                    BindStatement(statementWrapper);
 
-                return statementWrapper;
+                    return statementWrapper;
+                }
+                catch (ProtocolException e)
+                {
+                    HandleProtocolException(e);
+                    throw;
+                }
             }
         }
 
@@ -444,15 +485,23 @@ namespace NEsper.Catalyst.Client
         {
             using (var wrapper = CreateControlManager())
             {
-                var controlManager = wrapper.Channel;
-                var statementArgs = new StatementCreationArgs();
-                statementArgs.StatementText = eplStatement;
+                try
+                {
+                    var controlManager = wrapper.Channel;
+                    var statementArgs = new StatementCreationArgs();
+                    statementArgs.StatementText = eplStatement;
 
-                var statement = controlManager.CreateEPL(_instanceId, statementArgs);
-                var statementWrapper = new CatalystStatement(_adapter, statement, userObject);
-                BindStatement(statementWrapper);
+                    var statement = controlManager.CreateEPL(_instanceId, statementArgs);
+                    var statementWrapper = new CatalystStatement(_adapter, statement, userObject);
+                    BindStatement(statementWrapper);
 
-                return statementWrapper;
+                    return statementWrapper;
+                }
+                catch (ProtocolException e)
+                {
+                    HandleProtocolException(e);
+                    throw;
+                }
             }
         }
 
@@ -587,7 +636,24 @@ namespace NEsper.Catalyst.Client
         /// <throws>EPException indicates compilation errors.</throws>
         public EPPreparedStatement PrepareEPL(string eplExpression)
         {
-            throw new NotSupportedException();
+            using (var wrapper = CreateControlManager())
+            {
+                try
+                {
+                    var controlManager = wrapper.Channel;
+                    var statementArgs = new StatementCreationArgs();
+                    statementArgs.StatementText = eplExpression;
+
+                    var preparationId = controlManager.PrepareEPL(_instanceId, statementArgs);
+                    var statementWrapper = new CatalystPreparedStatement(_adapter, _instanceId, preparationId);
+                    return statementWrapper;
+                }
+                catch (ProtocolException e)
+                {
+                    HandleProtocolException(e);
+                    throw;
+                }
+            }
         }
 
         /// <summary>
@@ -616,10 +682,19 @@ namespace NEsper.Catalyst.Client
         /// <throws>EPException indicates compilation errors.</throws>
         public EPStatementObjectModel CompileEPL(string eplExpression)
         {
-            using (var wrapper = CreateControlManager()) {
-                var controlManager = wrapper.Channel;
-                var statementArgs = new StatementCreationArgs();
-                return controlManager.Compile(_instanceId, statementArgs);
+            using (var wrapper = CreateControlManager())
+            {
+                try
+                {
+                    var controlManager = wrapper.Channel;
+                    var statementArgs = new StatementCreationArgs();
+                    return controlManager.Compile(_instanceId, statementArgs);
+                }
+                catch (ProtocolException e)
+                {
+                    HandleProtocolException(e);
+                    throw;
+                }
             }
         }
 
@@ -635,21 +710,31 @@ namespace NEsper.Catalyst.Client
         /// </returns>
         public EPStatement GetStatement(string name)
         {
-            lock(_statementTable) {
+            lock (_statementTable)
+            {
                 var statementWrapper = _statementTable.Get(name);
-                if (statementWrapper.IsAlive) {
+                if ((statementWrapper != null) && statementWrapper.IsAlive)
+                {
                     return statementWrapper.Target;
                 }
             }
 
             using (var wrapper = CreateControlManager())
             {
-                var controlManager = wrapper.Channel;
-                var statement = controlManager.GetStatement(_instanceId, name);
-                var statementWrapper = new CatalystStatement(_adapter, statement);
-                BindStatement(statementWrapper);
+                try
+                {
+                    var controlManager = wrapper.Channel;
+                    var statement = controlManager.GetStatement(_instanceId, name);
+                    var statementWrapper = new CatalystStatement(_adapter, statement);
+                    BindStatement(statementWrapper);
 
-                return statementWrapper;
+                    return statementWrapper;
+                }
+                catch (ProtocolException e)
+                {
+                    HandleProtocolException(e);
+                    throw;
+                }
             }
         }
 

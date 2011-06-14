@@ -27,10 +27,12 @@ namespace NEsper.Catalyst
 
             // create the control manager(s)
             var restControlManager = new RestControlManager(_engineManager);
-            restControlManager.Open(new Uri("http://localhost/catalyst/engine"));
+            restControlManager.Open();
 
             Console.WriteLine("Press <Enter> to stop the service.");
             Console.ReadLine();
+
+            _engineManager.Dispose();
         }
     }
 }

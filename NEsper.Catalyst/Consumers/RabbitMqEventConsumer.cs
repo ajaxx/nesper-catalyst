@@ -50,7 +50,7 @@ namespace NEsper.Catalyst.Consumers
         /// </summary>
         public override void Dispose()
         {
-            if (Interlocked.CompareExchange(ref _active, 1, 0) == 0)
+            if (Interlocked.CompareExchange(ref _active, 1, 0) == 1)
             {
                 _subscription.Close();
                 _subscription = null;
@@ -72,9 +72,15 @@ namespace NEsper.Catalyst.Consumers
             {
                 BasicDeliverEventArgs e;
 
-                if (_subscription.Next(1000, out e))
+                var subscription = _subscription;
+                if (subscription == null)
                 {
-                    var latestEvent = _subscription.LatestEvent;
+                    return;
+                }
+
+                if (subscription.Next(1000, out e))
+                {
+                    var latestEvent = subscription.LatestEvent;
                     if (latestEvent != null)
                     {
                         DecodeAndRouteEvent(

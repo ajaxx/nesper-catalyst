@@ -8,6 +8,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Threading;
 
 using com.espertech.esper.compat;
@@ -49,36 +50,25 @@ namespace NEsper.Catalyst.SampleClient
         /// </summary>
         public void Start()
         {
-            var moneyType = new SyntheticType(
-                new SyntheticAtom<decimal>("Amount"),
-                new SyntheticAtom<string>("Currency"));
-
             var quoteType = SyntheticType
                 .Define()
                 .Declare<string>("Symbol")
-                .Declare("Bid", moneyType)
-                .Declare("Ask", moneyType);
+                .Declare<Money>("Bid")
+                .Declare<Money>("Ask");
 
+            _instance.Administrator.AddEventType<Account>();
             _instance.Administrator.AddEventType("SyntheticEvent", quoteType);
 
             var thread = new Thread(SendEvents) { IsBackground = false, Name = "Injector" };
             thread.Start();
         }
 
-        private IDictionary<string, object> MakeMoney(double amount)
-        {
-            var moneyEntity = new Dictionary<string, object>();
-            moneyEntity["Amount"] = amount;
-            moneyEntity["Currency"] = "USD";
-            return moneyEntity;
-        }
-
         private IDictionary<string, object> MakeSynthetic(MarketDataEvent marketDataEvent)
         {
             var syntheticEvent = new Dictionary<string, object>();
             syntheticEvent["Symbol"] = marketDataEvent.Symbol;
-            syntheticEvent["Bid"] = MakeMoney(marketDataEvent.Bid);
-            syntheticEvent["Ask"] = MakeMoney(marketDataEvent.Ask);
+            syntheticEvent["Bid"] = new Money(marketDataEvent.Bid, "USD");
+            syntheticEvent["Ask"] = new Money(marketDataEvent.Ask, "USD");
             return syntheticEvent;
         }
 
@@ -113,5 +103,41 @@ namespace NEsper.Catalyst.SampleClient
         {
             _sendIndicator.WaitOne();
         }
+    }
+
+    [DataContract]
+    public class Money
+    {
+        [DataMember]
+        public double Amount { get; set; }
+        [DataMember]
+        public Currency Currency { get; set; }
+
+        public Money(double amount, string currency)
+        {
+            Amount = amount;
+            Currency = new Currency {Country = "test", ISOCode = currency};
+        }
+
+        public Money()
+        {
+        }
+    }
+
+    [DataContract]
+    public class Currency
+    {
+        [DataMember]
+        public string Country { get; set; }
+
+        [DataMember]
+        public string ISOCode { get; set; }
+    }
+
+    [DataContract]
+    public class Account
+    {
+        [DataMember]
+        public IList<Money> Money { get; set; }
     }
 }

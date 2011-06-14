@@ -6,6 +6,8 @@
 ///////////////////////////////////////////////////////////////////////////////////////
 
 using System.Configuration;
+using System.Linq;
+using com.espertech.esper.compat.logging;
 
 namespace NEsper.Catalyst.Configuration
 {
@@ -24,5 +26,27 @@ namespace NEsper.Catalyst.Configuration
             get { return (ConsumerCollection)this["consumers"]; }
             set { this["consumers"] = value; }
         }
+
+        [ConfigurationProperty("control-manager", IsRequired = true)]
+        public ControlManagerConfigurationElement ControlManager
+        {
+            get { return (ControlManagerConfigurationElement)this["control-manager"]; }
+            set { this["control-manager"] = value; }
+        }
+
+        public static CatalystConfiguration GetDefaultInstance()
+        {
+            var appConfiguration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            var catConfiguration = appConfiguration.Sections.OfType<CatalystConfiguration>().FirstOrDefault();
+            if (catConfiguration == null)
+            {
+                Log.Warn("catalyst configuration section was not found");
+            }
+
+            return catConfiguration;
+        }
+
+        private static readonly ILog Log =
+            LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
     }
 }

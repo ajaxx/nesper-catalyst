@@ -110,7 +110,29 @@ namespace NEsper.Catalyst.Common
         [OperationContract]
         [WebInvoke(UriTemplate = "/instance/{instanceId}/compile", Method = "POST")]
         EPStatementObjectModel Compile(string instanceId, StatementCreationArgs creationArgs);
-        
+
+        /// <summary>
+        /// Creates a prepared statement based off the pattern that is presented.  The value
+        /// that is returned is a unique identifier to the representation of the prepared
+        /// statement on the server.  It is the prepared statement id.
+        /// </summary>
+        /// <param name="instanceId">The instance id.</param>
+        /// <param name="creationArgs">The creation args.</param>
+        /// <returns></returns>
+        [OperationContract]
+        [WebInvoke(UriTemplate = "/instance/{instanceId}/prepared/create", Method = "POST")]
+        string PrepareEPL(string instanceId, StatementCreationArgs creationArgs);
+
+        /// <summary>
+        /// Sets a value within the prepared statement.
+        /// </summary>
+        /// <param name="instanceId">The instance id.</param>
+        /// <param name="statementId">The statement id.</param>
+        /// <param name="value">The value.</param>
+        [OperationContract]
+        [WebInvoke(UriTemplate = "/instance/{instanceId}/prepared/{statementId}/set", Method = "POST")]
+        void SetPreparedValue(string instanceId, string statementId, object value);
+
         /// <summary>
         /// Destroys the pattern.
         /// </summary>

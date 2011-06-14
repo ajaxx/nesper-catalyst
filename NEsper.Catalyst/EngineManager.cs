@@ -17,6 +17,7 @@ namespace NEsper.Catalyst
     /// domain.  It represents the first entry point that an administrative application would see.
     /// </summary>
     public class EngineManager
+        : IDisposable
     {
         /// <summary>
         /// Dictionary of all engines, indexed by their unique identifier.
@@ -109,6 +110,27 @@ namespace NEsper.Catalyst
 
                 if (InstanceDestroyed != null) {
                     InstanceDestroyed(this, new InstanceEventArgs(engineInstance));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            lock (_engineInstanceTable)
+            {
+                var engineInstanceList = _engineInstanceTable.Values.ToList();
+                _engineInstanceTable.Clear();
+
+                foreach (var engineInstance in engineInstanceList)
+                {
+                    engineInstance.Dispose();
+                    if (InstanceDestroyed != null)
+                    {
+                        InstanceDestroyed(this, new InstanceEventArgs(engineInstance));
+                    }
                 }
             }
         }

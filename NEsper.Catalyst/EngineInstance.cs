@@ -121,6 +121,12 @@ namespace NEsper.Catalyst
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
+            ServiceProvider.Dispose();
+
+            foreach(var eventConsumer in _eventConsumers)
+            {
+                eventConsumer.Dispose();
+            }
         }
 
         /// <summary>

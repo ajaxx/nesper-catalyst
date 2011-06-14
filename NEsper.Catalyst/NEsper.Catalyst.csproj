@@ -128,6 +128,7 @@
     <Compile Include="Configuration\ConsumerElement.cs" />
     <Compile Include="Configuration\PublisherElement.cs" />
     <Compile Include="Configuration\PublisherCollection.cs" />
+    <Compile Include="Configuration\ControlManagerConfigurationElement.cs" />
     <Compile Include="Consumers\BaseEventConsumer.cs" />
     <Compile Include="Consumers\ConfigurationExtensions.cs" />
     <Compile Include="Consumers\MsmqEventConsumer.cs" />

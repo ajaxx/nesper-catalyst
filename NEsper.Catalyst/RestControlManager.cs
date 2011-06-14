@@ -21,6 +21,7 @@ using com.espertech.esper.client;
 using com.espertech.esper.client.soda;
 using com.espertech.esper.compat.logging;
 using com.espertech.esper.util;
+using NEsper.Catalyst.Configuration;
 
 namespace NEsper.Catalyst
 {
@@ -57,8 +58,28 @@ namespace NEsper.Catalyst
         /// <summary>
         /// Opens this instance.
         /// </summary>
+        public void Open()
+        {
+            var catalystConfiguration = CatalystConfiguration.GetDefaultInstance();
+            if ((catalystConfiguration != null) &&
+                (catalystConfiguration.ControlManager != null) &&
+                (catalystConfiguration.ControlManager.Uri != null))
+            {
+                Open(catalystConfiguration.ControlManager.Uri);
+            }
+            else
+            {
+                Open(new Uri("http://localhost/catalyst/engine"));
+            }
+        }
+
+        /// <summary>
+        /// Opens this instance.
+        /// </summary>
         public void Open(Uri serviceUri)
         {
+            Log.Info("Open: URI => {0}", serviceUri);
+
             _serviceHost = new WebServiceHost(this, serviceUri);
 
             var serviceBehavior = new WebHttpBehavior();
@@ -284,6 +305,40 @@ namespace NEsper.Catalyst
                 Log.Warn("Compile: BadRequest returned: {0}", e.Message);
                 throw new WebFaultException<string>(e.Message, HttpStatusCode.BadRequest);
             }
+        }
+
+        /// <summary>
+        /// Creates a prepared statement based off the pattern that is presented.  The value
+        /// that is returned is a unique identifier to the representation of the prepared
+        /// statement on the server.  It is the prepared statement id.
+        /// </summary>
+        /// <param name="instanceId">The instance id.</param>
+        /// <param name="creationArgs">The creation args.</param>
+        /// <returns></returns>
+        public string PrepareEPL(string instanceId, StatementCreationArgs creationArgs)
+        {
+            try
+            {
+                var instance = GetInstanceOrFault(instanceId);
+                //var prepared = instance.PrepareEPL(creationArgs.StatementText);
+                throw new NotImplementedException();
+            }
+            catch (EPException e)
+            {
+                Log.Warn("Compile: BadRequest returned: {0}", e.Message);
+                throw new WebFaultException<string>(e.Message, HttpStatusCode.BadRequest);
+            }
+        }
+
+        /// <summary>
+        /// Sets a value within the prepared statement.
+        /// </summary>
+        /// <param name="instanceId">The instance id.</param>
+        /// <param name="statementId">The statement id.</param>
+        /// <param name="value">The value.</param>
+        public void SetPreparedValue(string instanceId, string statementId, object value)
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>
