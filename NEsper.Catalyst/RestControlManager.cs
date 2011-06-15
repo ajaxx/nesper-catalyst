@@ -489,21 +489,25 @@ namespace NEsper.Catalyst
             Log.Info("AddEventType: instanceId = {0}, name = {1}, schemaTypeName = {2}",
                      instanceId,
                      eventTypeDefinition.Name,
-                     eventTypeDefinition.SchemaTypeName,
-                     eventTypeDefinition.Schema);
+                     eventTypeDefinition.SchemaTypeName);
 
             try
             {
                 var instance = GetInstanceOrFault(instanceId);
                 var fabricator = instance.SchemaFabricator;
-                var reader = XmlReader.Create(new StringReader(eventTypeDefinition.Schema));
-                var schema = XmlSchema.Read(reader, HandleSchemaValidation);
-                var schemaSet = new XmlSchemaSet();
-                schemaSet.Add(schema);
-                schemaSet.Compile();
+                var eventTypeSchemaSet = new XmlSchemaSet();
+
+                foreach(var schemaText in eventTypeDefinition.Schemas)
+                {
+                    var reader = XmlReader.Create(new StringReader(schemaText));
+                    var schema = XmlSchema.Read(reader, HandleSchemaValidation);
+                    eventTypeSchemaSet.Add(schema);
+                }
+
+                eventTypeSchemaSet.Compile();
 
                 var element = fabricator.GetNativeElement(
-                    schema,
+                    eventTypeSchemaSet,
                     eventTypeDefinition.SchemaTypeName);
 
                 instance.ServiceProvider.EPAdministrator
