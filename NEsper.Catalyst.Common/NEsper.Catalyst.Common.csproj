@@ -107,9 +107,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="NativeEventTypeDefinition.cs" />
     <Compile Include="EngineStatistics.cs" />
     <Compile Include="EventExtensions.cs" />
-    <Compile Include="EventTypeDefinition.cs" />
+    <Compile Include="MapEventTypeDefinition.cs" />
     <Compile Include="IControlManager.cs" />
     <Compile Include="InstanceCreationArgs.cs" />
     <Compile Include="InstanceDescriptor.cs" />
@@ -119,6 +120,8 @@
     <Compile Include="MapEvent.cs" />
     <Compile Include="MapEventExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SchemaFabricator.cs" />
+    <Compile Include="SerializationFabric.cs" />
     <Compile Include="StatementCreationArgs.cs" />
     <Compile Include="StatementDescriptor.cs" />
   </ItemGroup>

@@ -9,11 +9,13 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
+using System.Reflection;
 using System.Xml.Linq;
 
 using com.espertech.esper.client.soda;
 using com.espertech.esper.compat.logging;
 using com.espertech.esper.events;
+
 using NEsper.Catalyst.Publishers;
 
 namespace NEsper.Catalyst
@@ -59,6 +61,11 @@ namespace NEsper.Catalyst
         private readonly IEnumerable<IEventConsumer> _eventConsumers;
 
         /// <summary>
+        /// Schema fabricator for this engine.
+        /// </summary>
+        public SchemaFabricator SchemaFabricator { get; private set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="EngineInstance"/> class.
         /// </summary>
         public EngineInstance()
@@ -71,6 +78,9 @@ namespace NEsper.Catalyst
             {
                 Log.Warn("catalyst configuration section was not found");
             }
+
+            // create the schema fabricator
+            SchemaFabricator = new SchemaFabricator(new AssemblyName(Id));
 
             // create the service instance
             var serviceConfiguration = new com.espertech.esper.client.Configuration();
@@ -235,6 +245,16 @@ namespace NEsper.Catalyst
             {
                 statement.Dispose();
             }
+        }
+
+        /// <summary>
+        /// Sends a POCO event.
+        /// </summary>
+        /// <param name="event">The @event.</param>
+        public void SendEvent(Object @event)
+        {
+            var runtime = ServiceProvider.EPRuntime;
+            runtime.SendEvent(@event);
         }
 
         /// <summary>

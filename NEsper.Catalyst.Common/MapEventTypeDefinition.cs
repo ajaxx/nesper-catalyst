@@ -11,8 +11,8 @@ namespace NEsper.Catalyst.Common
 {
     [DataContract(
         Namespace = "http://www.patchwork-consulting.org",
-        Name = "EventTypeDefinition")]
-    public class EventTypeDefinition
+        Name = "MapEventTypeDefinition")]
+    public class MapEventTypeDefinition
     {
         /// <summary>
         /// Gets or sets the name.
@@ -36,23 +36,23 @@ namespace NEsper.Catalyst.Common
         public string[] SuperTypes { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="EventTypeDefinition"/> class.
+        /// Initializes a new instance of the <see cref="MapEventTypeDefinition"/> class.
         /// </summary>
         /// <param name="name">The name.</param>
         /// <param name="typeMap">The type map.</param>
-        public EventTypeDefinition(string name, EventTypeAtom[] typeMap)
+        public MapEventTypeDefinition(string name, EventTypeAtom[] typeMap)
         {
             Name = name;
             TypeMap = typeMap;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="EventTypeDefinition"/> class.
+        /// Initializes a new instance of the <see cref="MapEventTypeDefinition"/> class.
         /// </summary>
         /// <param name="name">The name.</param>
         /// <param name="typeMap">The type map.</param>
         /// <param name="superTypes">The super types.</param>
-        public EventTypeDefinition(string name, EventTypeAtom[] typeMap, string[] superTypes)
+        public MapEventTypeDefinition(string name, EventTypeAtom[] typeMap, string[] superTypes)
         {
             Name = name;
             TypeMap = typeMap;
@@ -60,9 +60,9 @@ namespace NEsper.Catalyst.Common
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="EventTypeDefinition"/> class.
+        /// Initializes a new instance of the <see cref="MapEventTypeDefinition"/> class.
         /// </summary>
-        public EventTypeDefinition()
+        public MapEventTypeDefinition()
         {
         }
     }

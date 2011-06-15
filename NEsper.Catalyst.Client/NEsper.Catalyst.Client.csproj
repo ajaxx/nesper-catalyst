@@ -130,7 +130,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RabbitMqEventConsumer.cs" />
     <Compile Include="RabbitMqEventConsumerFactory.cs" />
-    <Compile Include="SchemaFabricator.cs" />
     <Compile Include="SyntheticAtom.cs" />
     <Compile Include="SyntheticType.cs" />
   </ItemGroup>

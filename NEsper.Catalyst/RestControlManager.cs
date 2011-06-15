@@ -7,6 +7,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Runtime.Serialization.Json;
@@ -16,7 +17,7 @@ using System.ServiceModel.Description;
 using System.ServiceModel.Web;
 using System.Xml;
 using System.Xml.Linq;
-
+using System.Xml.Schema;
 using com.espertech.esper.client;
 using com.espertech.esper.client.soda;
 using com.espertech.esper.compat.logging;
@@ -398,11 +399,22 @@ namespace NEsper.Catalyst
                 var instance = GetInstanceOrFault(instanceId);
                 var eventBytes = System.Text.Encoding.UTF8.GetBytes(@event.EventData);
                 var dictionaryReader = JsonReaderWriterFactory.CreateJsonReader(
-                    eventBytes, 0, eventBytes.Length, new XmlDictionaryReaderQuotas());
-                var dictionaryDocument = XDocument.Load(dictionaryReader);
-                dictionaryDocument.Root.Name = @event.EventType;
-
-                instance.SendEvent(dictionaryDocument.Root);
+                        eventBytes, 0, eventBytes.Length, new XmlDictionaryReaderQuotas());
+    
+                var fabricator = instance.SchemaFabricator;
+                var fabricatorType = fabricator.GetType(@event.EventType);
+                if (fabricatorType != null)
+                {
+                    var serializer = new DataContractJsonSerializer(fabricatorType);
+                    var trueEntity = serializer.ReadObject(dictionaryReader);
+                    instance.SendEvent(trueEntity);
+                }
+                else
+                {
+                    var dictionaryDocument = XDocument.Load(dictionaryReader);
+                    dictionaryDocument.Root.Name = @event.EventType;
+                    instance.SendEvent(dictionaryDocument.Root);
+                }
             }
             catch (EPException e) {
                 Log.Warn("SendJsonEvent: BadRequest returned: {0}", e.Message);
@@ -458,13 +470,59 @@ namespace NEsper.Catalyst
         /// </summary>
         /// <param name="instanceId">The instance id.</param>
         /// <param name="eventTypeDefinition">The event type definition.</param>
-        public void AddEventType(string instanceId, EventTypeDefinition eventTypeDefinition)
+        public void AddEventType(string instanceId, MapEventTypeDefinition eventTypeDefinition)
         {
             var instance = GetInstanceOrFault(instanceId);
             var typeMap = ToTypeMap(eventTypeDefinition.TypeMap);
             instance.ServiceProvider.EPAdministrator
                 .GetConfiguration()
                 .AddEventType(eventTypeDefinition.Name, typeMap);
+        }
+
+        /// <summary>
+        /// Adds the type of the event.
+        /// </summary>
+        /// <param name="instanceId">The instance id.</param>
+        /// <param name="eventTypeDefinition">The event type definition.</param>
+        public void AddEventType(string instanceId, NativeEventTypeDefinition eventTypeDefinition)
+        {
+            Log.Info("AddEventType: instanceId = {0}, name = {1}, schemaTypeName = {2}",
+                     instanceId,
+                     eventTypeDefinition.Name,
+                     eventTypeDefinition.SchemaTypeName,
+                     eventTypeDefinition.Schema);
+
+            try
+            {
+                var instance = GetInstanceOrFault(instanceId);
+                var fabricator = instance.SchemaFabricator;
+                var reader = XmlReader.Create(new StringReader(eventTypeDefinition.Schema));
+                var schema = XmlSchema.Read(reader, HandleSchemaValidation);
+                var schemaSet = new XmlSchemaSet();
+                schemaSet.Add(schema);
+                schemaSet.Compile();
+
+                var element = fabricator.GetNativeElement(
+                    schema,
+                    eventTypeDefinition.SchemaTypeName);
+
+                instance.ServiceProvider.EPAdministrator
+                    .GetConfiguration()
+                    .AddEventType(eventTypeDefinition.Name, element.Type);
+            } catch( WebFaultException )
+            {
+                throw;
+            }
+            catch( Exception e )
+            {
+                Log.Error("AddEventType: failure due to exception", e);
+                throw;
+            }
+        }
+
+        private void HandleSchemaValidation(object sender, ValidationEventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         #endregion

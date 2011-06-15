@@ -8,7 +8,7 @@
 using System.ServiceModel;
 using System.ServiceModel.Web;
 using System.Xml.Linq;
-
+using System.Xml.Schema;
 using com.espertech.esper.client.soda;
 
 namespace NEsper.Catalyst.Common
@@ -174,9 +174,18 @@ namespace NEsper.Catalyst.Common
         /// </summary>
         /// <param name="instanceId">The instance id.</param>
         /// <param name="eventTypeDefinition">The event type definition.</param>
-        [OperationContract]
-        [WebInvoke(UriTemplate = "/instance/{instanceId}/eventType/add", Method = "POST")]
-        void AddEventType(string instanceId, EventTypeDefinition eventTypeDefinition);
+        [OperationContract(Name = "AddNativeEventType")]
+        [WebInvoke(UriTemplate = "/instance/{instanceId}/eventType/native", Method = "POST")]
+        void AddEventType(string instanceId, NativeEventTypeDefinition eventTypeDefinition);
+
+        /// <summary>
+        /// Adds the type of the event.
+        /// </summary>
+        /// <param name="instanceId">The instance id.</param>
+        /// <param name="eventTypeDefinition">The event type definition.</param>
+        [OperationContract(Name = "AddMapEventType")]
+        [WebInvoke(UriTemplate = "/instance/{instanceId}/eventType/map", Method = "POST")]
+        void AddEventType(string instanceId, MapEventTypeDefinition eventTypeDefinition);
         #endregion
 
         #region Statistics

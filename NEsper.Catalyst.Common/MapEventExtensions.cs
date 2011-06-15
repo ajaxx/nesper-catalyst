@@ -30,13 +30,25 @@ namespace NEsper.Catalyst.Common
         {
             var element = new XElement("entry");
             element.SetAttributeValue("key", entry.Key);
-            if (entry.Value is IDictionary<string, object>) {
-                var asDictionary = (IDictionary<string, object>) entry.Value;
+            if (entry.Value is IDictionary<string, object>)
+            {
+                var asDictionary = (IDictionary<string, object>)entry.Value;
                 element.AddFirst(ToXElement(asDictionary));
-            } else if (entry.Value != null) {
+            }
+            else if (entry.Value == null)
+            {
+            }
+            else if (entry.Value.GetType().IsBuiltinDataType())
+            {
                 element.SetAttributeValue("type", entry.Value.GetType().FullName);
                 element.SetValue(entry.Value);
             }
+            else
+            {
+                element.SetAttributeValue("type", entry.Value.GetType().FullName);
+                element.AddFirst(new XCData(SerializationFabric.Serialize(entry.Value)));
+            }
+
             return element;
         }
 
@@ -76,10 +88,30 @@ namespace NEsper.Catalyst.Common
             }
 
             var type = element.Attribute("type");
-            if (type != null) {
-                var trueType = TypeHelper.ResolveType(type.Value);
-                var value = Convert.ChangeType(element.Value, trueType);
-                return new KeyValuePair<string, object>(key.Value, value);
+            if (type != null)
+            {
+                var typePath = AppDomain.CurrentDomain.GetAssemblies();
+                var trueType = TypeHelper.ResolveType(type.Value, typePath, true);
+                if (trueType.IsBuiltinDataType())
+                {
+                    var primitiveValue = Convert.ChangeType(element.Value, trueType);
+                    return new KeyValuePair<string, object>(key.Value, primitiveValue);
+                }
+
+                var complexData = element.Nodes().OfType<XCData>().FirstOrDefault();
+                if (complexData == null)
+                {
+                    throw new ArgumentException("element missing CDATA");
+                }
+
+                var complexDataValue = complexData.Value as string;
+                if (complexDataValue == null)
+                {
+                    throw new ArgumentException("element contains malformed CDATA");
+                }
+
+                return new KeyValuePair<string, object>(
+                    key.Value, SerializationFabric.Deserialize(trueType, complexDataValue));
             }
 
             var dictionary = ToDictionary(element.Element("dictionary"));

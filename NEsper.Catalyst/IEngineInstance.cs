@@ -45,6 +45,11 @@ namespace NEsper.Catalyst
         EPServiceProvider ServiceProvider { get; }
 
         /// <summary>
+        /// Schema fabricator for this engine.
+        /// </summary>
+        SchemaFabricator SchemaFabricator { get; }
+
+        /// <summary>
         /// Gets the statement associated with the specified id.
         /// </summary>
         /// <param name="id">The id.</param>
@@ -83,6 +88,12 @@ namespace NEsper.Catalyst
         /// </summary>
         /// <param name="statementID">The statement ID.</param>
         void DestroyPattern(string statementID);
+
+        /// <summary>
+        /// Sends a POCO event.
+        /// </summary>
+        /// <param name="event">The @event.</param>
+        void SendEvent(Object @event);
 
         /// <summary>
         /// Sends an event.

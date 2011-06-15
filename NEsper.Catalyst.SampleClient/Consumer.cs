@@ -42,7 +42,7 @@ namespace NEsper.Catalyst.SampleClient
         public void Start()
         {
             var statement = _instance.Administrator.CreateEPL(
-                string.Format("select Symbol, Ask from {0}", _typename));
+                string.Format("select Symbol, Ask.Currency.Country from {0}", _typename));
                 //"select Symbol, Ask from NEsper.Catalyst.SampleClient.MarketDataEvent");
                 //"select * from NEsper.Catalyst.SampleClient.MarketDataEvent");
             statement.Events += DisplayEvents;

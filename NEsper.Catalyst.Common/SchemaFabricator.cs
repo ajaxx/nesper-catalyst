@@ -12,7 +12,7 @@ using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
 
-namespace NEsper.Catalyst.Client
+namespace NEsper.Catalyst.Common
 {
     public class SchemaFabricator
     {
@@ -50,6 +50,16 @@ namespace NEsper.Catalyst.Client
                 string.Format("{0}.dll", assemblyName.Name),
                 true);
             _typeTable = new Dictionary<XmlQualifiedName, Type>();
+        }
+
+        /// <summary>
+        /// Gets a fabricated type.
+        /// </summary>
+        /// <param name="fullTypeName">Full name of the type.</param>
+        /// <returns></returns>
+        public Type GetType(string fullTypeName)
+        {
+            return _assemblyBuilder.GetType(fullTypeName, false, true);
         }
 
         /// <summary>
@@ -112,12 +122,12 @@ namespace NEsper.Catalyst.Client
             {
                 var singleField = fields[0];
                 if (singleField.Type.IsGenericType &&
-                    singleField.Type.GetGenericTypeDefinition() == typeof(IList<>))
+                    singleField.Type.GetGenericTypeDefinition() == typeof(IList<>) &&
+                    singleField.TypeReduced)
                 {
                     return singleField.Type;
                 }
             }
-
 
             var @namespace = name.Namespace;
             @namespace = @namespace.Substring(@namespace.LastIndexOf('/') + 1);
@@ -151,7 +161,7 @@ namespace NEsper.Catalyst.Client
 
                 var fieldName = string.Format("_mField{0}", propName);
                 
-                typeBuilder.DefineField(
+                var fieldBuilder = typeBuilder.DefineField(
                     fieldName,
                     propType,
                     FieldAttributes.Private);
@@ -173,7 +183,7 @@ namespace NEsper.Catalyst.Client
 
                 var getMethodIL = getMethodBuilder.GetILGenerator();
                 getMethodIL.Emit(OpCodes.Ldarg_0);
-                getMethodIL.Emit(OpCodes.Ldfld, fieldName);
+                getMethodIL.Emit(OpCodes.Ldfld, fieldBuilder);
                 getMethodIL.Emit(OpCodes.Ret);
 
                 var setMethodBuilder = typeBuilder.DefineMethod(
@@ -185,7 +195,7 @@ namespace NEsper.Catalyst.Client
                 var setMethodIL = setMethodBuilder.GetILGenerator();
                 setMethodIL.Emit(OpCodes.Ldarg_0);
                 setMethodIL.Emit(OpCodes.Ldarg_1);
-                setMethodIL.Emit(OpCodes.Stfld, fieldName);
+                setMethodIL.Emit(OpCodes.Stfld, fieldBuilder);
                 setMethodIL.Emit(OpCodes.Ret);
 
                 propertyBuilder.SetGetMethod(getMethodBuilder);
@@ -289,18 +299,45 @@ namespace NEsper.Catalyst.Client
 
             var elementName = element.QualifiedName.Name;
             var elementType = GetNativeType(element.ElementSchemaType);
+            var elementTypeReduced = false;
+
             if (element.MaxOccurs > 1)
             {
                 elementType = typeof (IList<>).MakeGenericType(elementType);
+                elementTypeReduced = true;
             }
 
             var elementPair = new Element(
                 elementName,
-                elementType);
+                elementType,
+                elementTypeReduced);
 
             return elementPair;
         }
 
+        /// <summary>
+        /// Gets the native element representation of the named element.
+        /// </summary>
+        /// <param name="schema">The schema.</param>
+        /// <param name="elementName">Name of the element.</param>
+        /// <returns></returns>
+        public Element GetNativeElement(XmlSchema schema, XmlQualifiedName elementName)
+        {
+            if ((elementName == null) ||
+                (elementName == XmlQualifiedName.Empty))
+            {
+                throw new ArgumentException("invalid root element", "elementName");
+            }
+
+            var rootElement = (XmlSchemaElement)schema.Elements[elementName];
+            var rootNative = GetNativeElement(rootElement);
+
+            _assemblyBuilder.Save(
+                string.Format("{0}.dll", _assemblyBuilder.GetName().Name));
+
+            return rootNative;
+        }
+        
         /// <summary>
         /// Gets the native element representation of the named element.
         /// </summary>
@@ -317,15 +354,10 @@ namespace NEsper.Catalyst.Client
 
             var rootElementNamespace = elementName.Namespace;
             var rootElementSchema = schemaSet.Schemas(rootElementNamespace).OfType<XmlSchema>().FirstOrDefault();
-            var rootElement = (XmlSchemaElement)rootElementSchema.Elements[elementName];
-            var rootNative = GetNativeElement(rootElement);
 
-            _assemblyBuilder.Save(
-                string.Format("{0}.dll", _assemblyBuilder.GetName().Name));
-
-            return rootNative;
+            return GetNativeElement(rootElementSchema, elementName);
         }
-
+        
         /// <summary>
         /// Imports a schema.
         /// </summary>
@@ -364,14 +396,22 @@ namespace NEsper.Catalyst.Client
             public Type Type { get; set; }
 
             /// <summary>
+            /// Gets or sets a value indicating whether [type reduced].
+            /// </summary>
+            /// <value><c>true</c> if [type reduced]; otherwise, <c>false</c>.</value>
+            public bool TypeReduced { get; set; }
+
+            /// <summary>
             /// Initializes a new instance of the <see cref="Element"/> class.
             /// </summary>
             /// <param name="name">The name.</param>
             /// <param name="type">The type.</param>
-            public Element(string name, Type type)
+            /// <param name="typeReduced">if set to <c>true</c> [type reduced].</param>
+            public Element(string name, Type type, bool typeReduced)
             {
                 Name = name;
                 Type = type;
+                TypeReduced = typeReduced;
             }
 
             /// <summary>

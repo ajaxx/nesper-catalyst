@@ -8,6 +8,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.ServiceModel.Web;
@@ -67,58 +68,6 @@ namespace NEsper.Catalyst.Client
             return _controlManagerWrapper.Channel;
         }
 
-        private readonly IDictionary<Type, DataContractJsonSerializer> _serializerTable =
-            new Dictionary<Type, DataContractJsonSerializer>();
-
-        /// <summary>
-        /// Gets the serializer associated with the type.
-        /// </summary>
-        /// <param name="type">The type.</param>
-        /// <returns></returns>
-        private DataContractJsonSerializer GetSerializer(Type type)
-        {
-            lock (_serializerTable) {
-                var serializer = _serializerTable.Get(type);
-                if (serializer != null) {
-                    return serializer;
-                }
-
-                if (type.IsSerializable) {
-                    serializer = new DataContractJsonSerializer(type);
-                    _serializerTable[type] = serializer;
-                    return serializer;
-                }
-
-                // look for a data contract in the hierarchy of types
-                var dataContractType = type.FindAttributeInTypeTree(typeof (DataContractAttribute));
-                if (dataContractType != null) {
-                    serializer = new DataContractJsonSerializer(dataContractType);
-                    _serializerTable[type] = serializer;
-                    return serializer;
-                }
-
-                throw new EPException("type is not annotated as DataContract and is not Serializable");
-            }
-        }
-
-        /// <summary>
-        /// Serializes an object ... at least to the degree that it can.
-        /// </summary>
-        /// <param name="obj">The obj.</param>
-        /// <returns></returns>
-        private string SerializeJson(object obj)
-        {
-            using (var memoryStream = new MemoryStream())
-            {
-                using (var dictionaryWriter = JsonReaderWriterFactory.CreateJsonWriter(memoryStream, Encoding.UTF8, false)) {
-                    var serializer = GetSerializer(obj.GetType());
-                    serializer.WriteObject(dictionaryWriter, obj);
-                    dictionaryWriter.Close();
-                    return Encoding.UTF8.GetString(memoryStream.ToArray());
-                }
-            }
-        }
-
         /// <summary>
         /// Send an event represented by a plain object to the event stream processing
         /// runtime.
@@ -127,7 +76,7 @@ namespace NEsper.Catalyst.Client
         public void SendEvent(object obj)
         {
             var controlManager = GetControlManager();
-            var serialized = SerializeJson(obj);
+            var serialized = SerializationFabric.Serialize(obj);
             var eventArgs = new JsonEvent(obj.GetType().FullName, serialized);
             controlManager.SendJsonEvent(_instanceId, eventArgs);
         }
