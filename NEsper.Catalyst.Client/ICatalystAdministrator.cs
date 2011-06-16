@@ -9,6 +9,18 @@ namespace NEsper.Catalyst.Client
         : EPAdministrator
     {
         /// <summary>
+        /// Registers a type.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        void RegisterType<T>();
+
+        /// <summary>
+        /// Declares a native type.  Not required, but encouraged.
+        /// </summary>
+        /// <param name="nativeType">Type of the native.</param>
+        void RegisterType(Type nativeType);
+
+        /// <summary>
         /// Adds the type of the event.
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -24,23 +36,23 @@ namespace NEsper.Catalyst.Client
         /// <summary>
         /// Adds the type of the event.
         /// </summary>
-        /// <param name="eventTypeEventTypeName">Name of the event type.</param>
+        /// <param name="eventTypeName">Name of the event type.</param>
         /// <param name="nativeEventType">Native event type.</param>
-        void AddEventType(string eventTypeEventTypeName, Type nativeEventType);
+        void AddEventType(string eventTypeName, Type nativeEventType);
 
         /// <summary>
         /// Adds the type of the event.
         /// </summary>
-        /// <param name="eventTypeEventTypeName">Name of the event type.</param>
+        /// <param name="eventTypeName">Name of the event type.</param>
         /// <param name="typeMap">The type map.</param>
-        void AddEventType(string eventTypeEventTypeName, IDictionary<string, object> typeMap);
+        void AddEventType(string eventTypeName, IDictionary<string, object> typeMap);
 
         /// <summary>
         /// Adds the type of the event.
         /// </summary>
-        /// <param name="eventTypeEventTypeName">Name of the event type.</param>
+        /// <param name="eventTypeName">Name of the event type.</param>
         /// <param name="typeMap">The type map.</param>
         /// <param name="superTypes">The super types.</param>
-        void AddEventType(string eventTypeEventTypeName, IDictionary<string, object> typeMap, params string[] superTypes);
+        void AddEventType(string eventTypeName, IDictionary<string, object> typeMap, params string[] superTypes);
     }
 }

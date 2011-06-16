@@ -466,6 +466,47 @@ namespace NEsper.Catalyst
         }
 
         /// <summary>
+        /// Declares a type.
+        /// </summary>
+        /// <param name="instanceId">The instance id.</param>
+        /// <param name="typeDefinition">The event type definition.</param>
+        public void RegisterType(string instanceId, NativeTypeDefinition typeDefinition)
+        {
+            Log.Info("RegisterType: instanceId = {0}, schemaTypeName = {1}",
+                     instanceId,
+                     typeDefinition.SchemaTypeName);
+
+            try
+            {
+                var instance = GetInstanceOrFault(instanceId);
+                var fabricator = instance.SchemaFabricator;
+                var eventTypeSchemaSet = new XmlSchemaSet();
+
+                foreach (var schemaText in typeDefinition.Schemas)
+                {
+                    var reader = XmlReader.Create(new StringReader(schemaText));
+                    var schema = XmlSchema.Read(reader, HandleSchemaValidation);
+                    eventTypeSchemaSet.Add(schema);
+                }
+
+                eventTypeSchemaSet.Compile();
+
+                fabricator.GetNativeElement(
+                    eventTypeSchemaSet,
+                    typeDefinition.SchemaTypeName);
+            }
+            catch (WebFaultException)
+            {
+                throw;
+            }
+            catch (Exception e)
+            {
+                Log.Error("RegisterType: failure due to exception", e);
+                throw;
+            }
+        }
+
+        /// <summary>
         /// Adds the type of the event.
         /// </summary>
         /// <param name="instanceId">The instance id.</param>
@@ -489,30 +530,22 @@ namespace NEsper.Catalyst
             Log.Info("AddEventType: instanceId = {0}, name = {1}, schemaTypeName = {2}",
                      instanceId,
                      eventTypeDefinition.Name,
-                     eventTypeDefinition.SchemaTypeName);
+                     eventTypeDefinition.TypeName);
 
             try
             {
                 var instance = GetInstanceOrFault(instanceId);
-                var fabricator = instance.SchemaFabricator;
-                var eventTypeSchemaSet = new XmlSchemaSet();
-
-                foreach(var schemaText in eventTypeDefinition.Schemas)
+                var eventType = TypeHelper.ResolveType(eventTypeDefinition.TypeName, false);
+                if (eventType == null)
                 {
-                    var reader = XmlReader.Create(new StringReader(schemaText));
-                    var schema = XmlSchema.Read(reader, HandleSchemaValidation);
-                    eventTypeSchemaSet.Add(schema);
+                    throw new WebFaultException<string>(
+                        string.Format("Unable to resolve type '{0}'", eventTypeDefinition.TypeName),
+                        HttpStatusCode.BadRequest);
                 }
-
-                eventTypeSchemaSet.Compile();
-
-                var element = fabricator.GetNativeElement(
-                    eventTypeSchemaSet,
-                    eventTypeDefinition.SchemaTypeName);
 
                 instance.ServiceProvider.EPAdministrator
                     .GetConfiguration()
-                    .AddEventType(eventTypeDefinition.Name, element.Type);
+                    .AddEventType(eventTypeDefinition.Name, eventType);
             } catch( WebFaultException )
             {
                 throw;

@@ -5,11 +5,7 @@
 // a copy of which has been included with this distribution in the license.txt file.  /
 ///////////////////////////////////////////////////////////////////////////////////////
 
-using System.Collections.Generic;
-using System.IO;
 using System.Runtime.Serialization;
-using System.Xml;
-using System.Xml.Schema;
 
 namespace NEsper.Catalyst.Common
 {
@@ -26,52 +22,21 @@ namespace NEsper.Catalyst.Common
         public string Name { get; set; }
 
         /// <summary>
-        /// Gets or sets the name of the element.
+        /// Gets or sets the name of the type.
         /// </summary>
-        /// <value>The name of the element.</value>
+        /// <value>The name of the type.</value>
         [DataMember]
-        public XmlQualifiedName SchemaTypeName { get; set; }
-
-        /// <summary>
-        /// Gets or sets the schema.
-        /// </summary>
-        /// <value>The schema.</value>
-        [DataMember]
-        public string[] Schemas { get; set; }
+        public string TypeName { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NativeEventTypeDefinition"/> class.
         /// </summary>
         /// <param name="name">The name.</param>
-        /// <param name="schemaTypeName">Name of the schema type.</param>
-        /// <param name="schemaSet">The schema set.</param>
-        public NativeEventTypeDefinition(string name, XmlQualifiedName schemaTypeName, XmlSchemaSet schemaSet)
+        /// <param name="typeName">Name of the type.</param>
+        public NativeEventTypeDefinition(string name, string typeName)
         {
             Name = name;
-            SchemaTypeName = schemaTypeName;
-
-            var schemaList = new List<string>();
-            foreach(XmlSchema schema in schemaSet.Schemas())
-            {
-                var stringWriter = new StringWriter();
-                schema.Write(stringWriter);
-                schemaList.Add(stringWriter.ToString());
-            }
-
-            Schemas = schemaList.ToArray();
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="NativeEventTypeDefinition"/> class.
-        /// </summary>
-        /// <param name="name">The name.</param>
-        /// <param name="schemaTypeName">Name of the schema type.</param>
-        /// <param name="schemas">The schemas.</param>
-        public NativeEventTypeDefinition(string name, XmlQualifiedName schemaTypeName, string[] schemas)
-        {
-            Name = name;
-            SchemaTypeName = schemaTypeName;
-            Schemas = schemas;
+            TypeName = typeName;
         }
 
         /// <summary>

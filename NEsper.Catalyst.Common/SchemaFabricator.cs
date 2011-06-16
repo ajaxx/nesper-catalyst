@@ -20,19 +20,28 @@ namespace NEsper.Catalyst.Common
         private readonly ModuleBuilder _moduleBuilder;
         private readonly IDictionary<XmlQualifiedName, Type> _typeTable;
 
+        private static SchemaFabricator _default;
+        private static readonly object DefaultLock = new object();
+
         /// <summary>
         /// Gets or sets the default instance.
         /// </summary>
         /// <value>The default instance.</value>
-        public static SchemaFabricator DefaultInstance { get; private set; }
-
-        /// <summary>
-        /// Initializes the <see cref="SchemaFabricator"/> class.
-        /// </summary>
-        static SchemaFabricator()
+        public static SchemaFabricator DefaultInstance
         {
-            var assemblyName = new AssemblyName("__Fabrication");
-            DefaultInstance = new SchemaFabricator(assemblyName);
+            get
+            {
+                lock(DefaultLock)
+                {
+                    if (_default == null)
+                    {
+                        var assemblyName = new AssemblyName("__Fabrication");
+                        _default = new SchemaFabricator(assemblyName);
+                    }
+                }
+
+                return _default;
+            }
         }
 
         /// <summary>

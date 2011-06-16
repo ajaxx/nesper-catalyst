@@ -170,6 +170,15 @@ namespace NEsper.Catalyst.Common
         void SendJsonEvent(string instanceId, JsonEvent @event);
 
         /// <summary>
+        /// Registers a type.
+        /// </summary>
+        /// <param name="instanceId">The instance id.</param>
+        /// <param name="typeDefinition">The event type definition.</param>
+        [OperationContract(Name = "RegisterType")]
+        [WebInvoke(UriTemplate = "/instance/{instanceId}/type/native", Method = "POST")]
+        void RegisterType(string instanceId, NativeTypeDefinition typeDefinition);
+
+        /// <summary>
         /// Adds the type of the event.
         /// </summary>
         /// <param name="instanceId">The instance id.</param>
