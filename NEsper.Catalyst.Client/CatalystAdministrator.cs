@@ -12,18 +12,18 @@ using System.Net;
 using System.Runtime.Serialization;
 using System.ServiceModel;
 using System.ServiceModel.Web;
-using System.Xml.Schema;
 
 using com.espertech.esper.client;
 using com.espertech.esper.client.deploy;
 using com.espertech.esper.client.soda;
 using com.espertech.esper.compat;
 using com.espertech.esper.util;
-
 using NEsper.Catalyst.Common;
 
 namespace NEsper.Catalyst.Client
 {
+    using TypeMap = IDictionary<string, object>;
+
     public class CatalystAdministrator
         : ICatalystAdministrator
     {
@@ -31,6 +31,9 @@ namespace NEsper.Catalyst.Client
         private readonly IDictionary<string, WeakReference<CatalystStatement>> _statementTable;
         private readonly WebChannelFactory<IControlManager> _webChannelFactory;
         private readonly string _instanceId;
+
+        private readonly HashSet<Type> _registeredTypes =
+            new HashSet<Type>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CatalystAdministrator"/> class.
@@ -97,6 +100,82 @@ namespace NEsper.Catalyst.Client
             }
         }
 
+
+        /// <summary>
+        /// Declares a native type.  Not required, but encouraged.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public void RegisterType<T>()
+        {
+            RegisterType(typeof (T));
+        }
+
+        /// <summary>
+        /// Declares a native type.  Not required, but encouraged.
+        /// </summary>
+        /// <param name="nativeType">Type of the native.</param>
+        public void RegisterType(Type nativeType)
+        {
+            if ((nativeType == null) || 
+                (nativeType.IsBuiltinDataType()))
+            {
+                return;
+            }
+            
+            lock (_registeredTypes)
+            {
+                if (_registeredTypes.Contains(nativeType))
+                {
+                    return;
+                }
+
+                var dataContractExporter = new XsdDataContractExporter();
+                dataContractExporter.Export(nativeType);
+
+                var rootElementName = dataContractExporter.GetRootElementName(nativeType);
+                var rootElementSchemaSet = dataContractExporter.Schemas;
+
+                using (var wrapper = CreateControlManager())
+                {
+                    WithExceptionHandling(
+                        delegate
+                            {
+                                var controlManager = wrapper.Channel;
+                                var eventTypeDefinition = new NativeTypeDefinition(
+                                    rootElementName,
+                                    rootElementSchemaSet);
+
+                                controlManager.RegisterType(_instanceId, eventTypeDefinition);
+                            });
+                }
+
+                _registeredTypes.Add(nativeType);
+            }
+        }
+
+        /// <summary>
+        /// Registers a type tree.
+        /// </summary>
+        /// <param name="typeMap">The type map.</param>
+        public void RegisterTypeTree(TypeMap typeMap)
+        {
+            foreach(var value in typeMap.Values)
+            {
+                if (value is Type)
+                {
+                    RegisterType((Type) value);
+                }
+                else if ( value is string )
+                {
+                    RegisterType(TypeHelper.ResolveType((string) value, false));
+                }
+                else if ( value is IDictionary<string, object> )
+                {
+                    RegisterTypeTree((IDictionary<string, object>) value);
+                }
+            }
+        }
+
         /// <summary>
         /// Adds the type of the event.
         /// </summary>
@@ -119,15 +198,11 @@ namespace NEsper.Catalyst.Client
         /// <summary>
         /// Adds the type of the event.
         /// </summary>
-        /// <param name="eventTypeEventTypeName">Name of the event type.</param>
+        /// <param name="eventTypeName">Name of the event type.</param>
         /// <param name="nativeEventType">Native event type.</param>
-        public void AddEventType(string eventTypeEventTypeName, Type nativeEventType)
+        public void AddEventType(string eventTypeName, Type nativeEventType)
         {
-            var dataContractExporter = new XsdDataContractExporter();
-            dataContractExporter.Export(nativeEventType);
-
-            var rootElementName = dataContractExporter.GetRootElementName(nativeEventType);
-            var rootElementSchemaSet = dataContractExporter.Schemas;
+            RegisterType(nativeEventType);
 
             using (var wrapper = CreateControlManager())
             {
@@ -136,9 +211,7 @@ namespace NEsper.Catalyst.Client
                     {
                         var controlManager = wrapper.Channel;
                         var eventTypeDefinition = new NativeEventTypeDefinition(
-                            eventTypeEventTypeName,
-                            rootElementName,
-                            rootElementSchemaSet);
+                            eventTypeName, nativeEventType.FullName);
 
                         controlManager.AddEventType(_instanceId, eventTypeDefinition);
                     });
@@ -148,20 +221,22 @@ namespace NEsper.Catalyst.Client
         /// <summary>
         /// Adds the type of the event.
         /// </summary>
-        /// <param name="eventTypeEventTypeName">Name of the event type.</param>
+        /// <param name="eventTypeName">Name of the event type.</param>
         /// <param name="typeMap">The type map.</param>
-        public void AddEventType(string eventTypeEventTypeName, IDictionary<string, object> typeMap)
+        public void AddEventType(string eventTypeName, IDictionary<string, object> typeMap)
         {
             var eventTypeAtoms = ToEventTypeAtoms(typeMap);
 
             using (var wrapper = CreateControlManager())
             {
+                RegisterTypeTree(typeMap);
+
                 WithExceptionHandling(
                     delegate
                     {
                         var controlManager = wrapper.Channel;
                         var eventTypeDefinition = new MapEventTypeDefinition(
-                            eventTypeEventTypeName, eventTypeAtoms.ToArray());
+                            eventTypeName, eventTypeAtoms.ToArray());
                         controlManager.AddEventType(_instanceId, eventTypeDefinition);
                     });
             }
@@ -170,10 +245,10 @@ namespace NEsper.Catalyst.Client
         /// <summary>
         /// Adds the type of the event.
         /// </summary>
-        /// <param name="eventTypeEventTypeName">Name of the event type.</param>
+        /// <param name="eventTypeName">Name of the event type.</param>
         /// <param name="typeMap">The type map.</param>
         /// <param name="superTypes">The super types.</param>
-        public void AddEventType(string eventTypeEventTypeName, IDictionary<string, object> typeMap, params string[] superTypes)
+        public void AddEventType(string eventTypeName, IDictionary<string, object> typeMap, params string[] superTypes)
         {
             var eventTypeAtoms = ToEventTypeAtoms(typeMap);
             var superTypeArray = superTypes != null ? superTypes.ToArray() : null;
@@ -185,7 +260,7 @@ namespace NEsper.Catalyst.Client
                     {
                         var controlManager = wrapper.Channel;
                         var eventTypeDefinition = new MapEventTypeDefinition(
-                            eventTypeEventTypeName, eventTypeAtoms.ToArray(), superTypeArray);
+                            eventTypeName, eventTypeAtoms.ToArray(), superTypeArray);
                         controlManager.AddEventType(_instanceId, eventTypeDefinition);
                     });
             }
