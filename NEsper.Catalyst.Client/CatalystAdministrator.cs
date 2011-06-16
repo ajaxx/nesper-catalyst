@@ -17,6 +17,7 @@ using com.espertech.esper.client;
 using com.espertech.esper.client.deploy;
 using com.espertech.esper.client.soda;
 using com.espertech.esper.compat;
+using com.espertech.esper.compat.logging;
 using com.espertech.esper.util;
 using NEsper.Catalyst.Common;
 
@@ -34,6 +35,8 @@ namespace NEsper.Catalyst.Client
 
         private readonly HashSet<Type> _registeredTypes =
             new HashSet<Type>();
+
+        public event EventHandler<TypeEventArgs> TypeRegistered;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CatalystAdministrator"/> class.
@@ -150,6 +153,13 @@ namespace NEsper.Catalyst.Client
                 }
 
                 _registeredTypes.Add(nativeType);
+
+                Log.Info("RegisterType: Type '{0}' registered", nativeType.FullName);
+
+                if ( TypeRegistered != null )
+                {
+                    TypeRegistered(this, new TypeEventArgs(nativeType));
+                }
             }
         }
 
@@ -887,6 +897,27 @@ namespace NEsper.Catalyst.Client
                 HandleProtocolException(e);
                 throw;
             }
+        }
+
+        private static readonly ILog Log =
+            LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+    }
+
+    public class TypeEventArgs : EventArgs
+    {
+        /// <summary>
+        /// Gets or sets the type.
+        /// </summary>
+        /// <value>The type.</value>
+        public Type Type { get; private set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TypeEventArgs"/> class.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        public TypeEventArgs(Type type)
+        {
+            Type = type;
         }
     }
 }

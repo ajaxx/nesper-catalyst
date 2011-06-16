@@ -54,5 +54,10 @@ namespace NEsper.Catalyst.Client
         /// <param name="typeMap">The type map.</param>
         /// <param name="superTypes">The super types.</param>
         void AddEventType(string eventTypeName, IDictionary<string, object> typeMap, params string[] superTypes);
+
+        /// <summary>
+        /// Occurs when a native type is registered.
+        /// </summary>
+        event EventHandler<TypeEventArgs> TypeRegistered;
     }
 }
