@@ -15,7 +15,7 @@ namespace NEsper.Catalyst.Client
         void RegisterType<T>();
 
         /// <summary>
-        /// Declares a native type.  Not required, but encouraged.
+        /// Registers a native type.  Not required, but encouraged.
         /// </summary>
         /// <param name="nativeType">Type of the native.</param>
         void RegisterType(Type nativeType);
@@ -59,5 +59,23 @@ namespace NEsper.Catalyst.Client
         /// Occurs when a native type is registered.
         /// </summary>
         event EventHandler<TypeEventArgs> TypeRegistered;
+    }
+
+    public class TypeEventArgs : EventArgs
+    {
+        /// <summary>
+        /// Gets or sets the type.
+        /// </summary>
+        /// <value>The type.</value>
+        public Type Type { get; private set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TypeEventArgs"/> class.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        public TypeEventArgs(Type type)
+        {
+            Type = type;
+        }
     }
 }

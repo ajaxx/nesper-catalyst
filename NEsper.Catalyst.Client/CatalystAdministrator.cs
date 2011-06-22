@@ -902,22 +902,4 @@ namespace NEsper.Catalyst.Client
         private static readonly ILog Log =
             LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
     }
-
-    public class TypeEventArgs : EventArgs
-    {
-        /// <summary>
-        /// Gets or sets the type.
-        /// </summary>
-        /// <value>The type.</value>
-        public Type Type { get; private set; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="TypeEventArgs"/> class.
-        /// </summary>
-        /// <param name="type">The type.</param>
-        public TypeEventArgs(Type type)
-        {
-            Type = type;
-        }
-    }
 }

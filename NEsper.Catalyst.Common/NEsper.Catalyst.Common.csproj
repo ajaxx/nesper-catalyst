@@ -107,6 +107,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataContractExporter.cs" />
     <Compile Include="NativeEventTypeDefinition.cs" />
     <Compile Include="EngineStatistics.cs" />
     <Compile Include="EventExtensions.cs" />

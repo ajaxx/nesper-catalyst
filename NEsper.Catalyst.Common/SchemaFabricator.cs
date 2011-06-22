@@ -12,6 +12,8 @@ using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
 
+using com.espertech.esper.compat;
+
 namespace NEsper.Catalyst.Common
 {
     public class SchemaFabricator
@@ -71,6 +73,95 @@ namespace NEsper.Catalyst.Common
             return _assemblyBuilder.GetType(fullTypeName, false, true);
         }
 
+        private string GetHashFor(Action<TextWriter> writerAction)
+        {
+            using (var memoryStream = new MemoryStream())
+            {
+                var sha256 = SHA256.Create();
+
+                using (var cryptoStream = new CryptoStream(memoryStream, sha256, CryptoStreamMode.Write))
+                {
+                    using (var cryptoWriter = new StreamWriter(cryptoStream, Encoding.UTF8))
+                    {
+                        writerAction.Invoke(cryptoWriter);
+                        cryptoWriter.Flush();
+                        cryptoStream.FlushFinalBlock();
+
+                        return Convert.ToBase64String(sha256.Hash);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the name of the type.
+        /// </summary>
+        /// <param name="qname">The qname.</param>
+        /// <returns></returns>
+        public static string GetTypeName(XmlQualifiedName qname)
+        {
+            var @namespace = qname.Namespace;
+            @namespace = @namespace.Substring(@namespace.LastIndexOf('/') + 1);
+
+            if (string.IsNullOrWhiteSpace(@namespace))
+            {
+                return qname.Name;
+            }
+
+            return string.Format("{0}.{1}", @namespace, qname.Name);
+        }
+
+        /// <summary>
+        /// Gets the particle signature.
+        /// </summary>
+        /// <param name="particle">The particle.</param>
+        /// <param name="name">The name.</param>
+        /// <returns></returns>
+        private string GetParticleSignature(XmlSchemaSequence particle, XmlQualifiedName name)
+        {
+            var fields = particle.Items
+                .OfType<XmlSchemaElement>()
+                .Select(GetNativeElement);
+
+            return GetHashFor(
+                writer =>
+                    {
+                        writer.Write(GetTypeName(name));
+
+                        foreach (var field in fields)
+                        {
+                            writer.Write(field.Name);
+                            writer.Write(field.Type.FullName);
+                        }
+                    });
+        }
+
+        /// <summary>
+        /// Gets the extension signature.
+        /// </summary>
+        /// <param name="extension">The extension.</param>
+        /// <param name="name">The name.</param>
+        /// <returns></returns>
+        private string GetExtensionSignature(XmlSchemaComplexContentExtension extension, XmlQualifiedName name)
+        {
+            var particle = (XmlSchemaSequence)extension.Particle;
+            var fields = particle.Items
+                .OfType<XmlSchemaElement>()
+                .Select(GetNativeElement);
+
+            return GetHashFor(
+                writer =>
+                    {
+                        writer.Write(GetTypeName(name));
+                        writer.Write(GetTypeName(extension.BaseTypeName));
+                        foreach (var field in fields)
+                        {
+                            writer.Write(field.Name);
+                            writer.Write(field.Type.FullName);
+                        }
+                    });
+        }
+
         /// <summary>
         /// Gets a unique signature for a complex type.
         /// </summary>
@@ -79,34 +170,29 @@ namespace NEsper.Catalyst.Common
         private string GetTypeSignature(XmlSchemaComplexType complexType)
         {
             var name = complexType.QualifiedName;
-            var particle = complexType.Particle as XmlSchemaSequence;
-            Debug.Assert(particle != null);
-
-            var fields = particle.Items
-                .OfType<XmlSchemaElement>()
-                .Select(GetNativeElement);
-
-            var @namespace = name.Namespace;
-            @namespace = @namespace.Substring(@namespace.LastIndexOf('/') + 1);
-
-            var sha256 = SHA256.Create();
-            var memoryStream = new MemoryStream();
-            var cryptoStream = new CryptoStream(
-                memoryStream, sha256, CryptoStreamMode.Write);
-            var cryptoWriter = new StreamWriter(cryptoStream, Encoding.Unicode);
-
-            cryptoWriter.Write(string.Format("{0}.{1}", @namespace, name.Name));
-
-            foreach (var field in fields)
+            var content = complexType.ContentModel;
+            if (content is XmlSchemaComplexContent)
             {
-                cryptoWriter.Write(field.Name);
-                cryptoWriter.Write(field.Type.FullName);
+                var complexContent = (XmlSchemaComplexContent) content;
+                var extension = complexContent.Content as XmlSchemaComplexContentExtension;
+                if (extension != null)
+                {
+                    return GetExtensionSignature(extension, name);
+                }
+
+                throw new ArgumentException("invalid type", "complexType");
             }
+            else if (content != null)
+            {
+                throw new ArgumentException("invalid type", "complexType");
+            }
+            else
+            {
+                var particle = complexType.ContentTypeParticle as XmlSchemaSequence;
+                Debug.Assert(particle != null);
 
-            cryptoWriter.Flush();
-            cryptoStream.FlushFinalBlock();
-
-            return Convert.ToBase64String(memoryStream.ToArray());
+                return GetParticleSignature(particle, name);
+            }
         }
 
         /// <summary>
@@ -118,7 +204,38 @@ namespace NEsper.Catalyst.Common
         private Type BuildNativeType(XmlSchemaComplexType complexType, string signature)
         {
             var name = complexType.QualifiedName;
-            var particle = complexType.Particle as XmlSchemaSequence;
+            var content = complexType.ContentModel;
+            if (content is XmlSchemaComplexContent)
+            {
+                var complexContent = (XmlSchemaComplexContent) content;
+                var extension = complexContent.Content as XmlSchemaComplexContentExtension;
+                if (extension != null)
+                {
+                    var schemaSet = ScopedInstance<XmlSchemaSet>.Current;
+                    var particle = (XmlSchemaSequence)extension.Particle;
+                    var baseElement = GetNativeElement(
+                        schemaSet, extension.BaseTypeName);
+
+                    return BuildNativeType(
+                        name, particle, baseElement.Type, signature);
+                }
+
+                throw new ArgumentException("invalid type", "complexType");
+            }
+            else if (content != null)
+            {
+                throw new ArgumentException("invalid type", "complexType");
+            }
+            else
+            {
+                var particle = complexType.ContentTypeParticle as XmlSchemaSequence;
+                return BuildNativeType(
+                    name, particle, typeof(object), signature);
+            }
+        }
+
+        private Type BuildNativeType(XmlQualifiedName name, XmlSchemaSequence particle, Type baseType, string signature)
+        {
             Debug.Assert(particle != null);
 
             var fields = particle.Items
@@ -131,30 +248,27 @@ namespace NEsper.Catalyst.Common
             {
                 var singleField = fields[0];
                 if (singleField.Type.IsGenericType &&
-                    singleField.Type.GetGenericTypeDefinition() == typeof(IList<>) &&
+                    singleField.Type.GetGenericTypeDefinition() == typeof (IList<>) &&
                     singleField.TypeReduced)
                 {
                     return singleField.Type;
                 }
             }
 
-            var @namespace = name.Namespace;
-            @namespace = @namespace.Substring(@namespace.LastIndexOf('/') + 1);
-
-            var typename = string.Format("{0}.{1}", @namespace, name.Name);
+            var typename = GetTypeName(name);
             var typeBuilder = _moduleBuilder.DefineType(
                 typename,
-                TypeAttributes.Public | TypeAttributes.Serializable | TypeAttributes.Sealed,
-                typeof(object));
+                TypeAttributes.Public | TypeAttributes.Serializable,
+                baseType);
 
-            var dataContractAttributeType = typeof(DataContractAttribute);
+            var dataContractAttributeType = typeof (DataContractAttribute);
             var dataContractAttributeConstructor = dataContractAttributeType.GetConstructor(Type.EmptyTypes);
             var dataContractCustomAttributeBuilder = new CustomAttributeBuilder(
                 dataContractAttributeConstructor, new object[0]);
 
             typeBuilder.SetCustomAttribute(dataContractCustomAttributeBuilder);
 
-            var dataMemberAttributeType = typeof(DataMemberAttribute);
+            var dataMemberAttributeType = typeof (DataMemberAttribute);
             var dataMemberAttributeConstructor = dataMemberAttributeType.GetConstructor(Type.EmptyTypes);
 
             var signatureBuilder = typeBuilder.DefineField(
@@ -169,7 +283,7 @@ namespace NEsper.Catalyst.Common
                 var propType = field.Type;
 
                 var fieldName = string.Format("_mField{0}", propName);
-                
+
                 var fieldBuilder = typeBuilder.DefineField(
                     fieldName,
                     propType,
@@ -198,8 +312,8 @@ namespace NEsper.Catalyst.Common
                 var setMethodBuilder = typeBuilder.DefineMethod(
                     string.Format("set_{0}", propName),
                     MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig,
-                    typeof(void),
-                    new[] { propType });
+                    typeof (void),
+                    new[] {propType});
 
                 var setMethodIL = setMethodBuilder.GetILGenerator();
                 setMethodIL.Emit(OpCodes.Ldarg_0);
@@ -341,9 +455,6 @@ namespace NEsper.Catalyst.Common
             var rootElement = (XmlSchemaElement)schema.Elements[elementName];
             var rootNative = GetNativeElement(rootElement);
 
-            _assemblyBuilder.Save(
-                string.Format("{0}.dll", _assemblyBuilder.GetName().Name));
-
             return rootNative;
         }
         
@@ -355,23 +466,26 @@ namespace NEsper.Catalyst.Common
         /// <returns></returns>
         public Element GetNativeElement(XmlSchemaSet schemaSet, XmlQualifiedName elementName )
         {
-            if ((elementName == null) ||
-                (elementName == XmlQualifiedName.Empty))
+            using (ScopedInstance<XmlSchemaSet>.Set(schemaSet))
             {
-                throw new ArgumentException("invalid root element", "elementName");
+                if ((elementName == null) ||
+                    (elementName == XmlQualifiedName.Empty))
+                {
+                    throw new ArgumentException("invalid root element", "elementName");
+                }
+
+                var rootElementNamespace = elementName.Namespace;
+                var rootElementSchema = schemaSet.Schemas(rootElementNamespace).OfType<XmlSchema>().FirstOrDefault();
+
+                return GetNativeElement(rootElementSchema, elementName);
             }
-
-            var rootElementNamespace = elementName.Namespace;
-            var rootElementSchema = schemaSet.Schemas(rootElementNamespace).OfType<XmlSchema>().FirstOrDefault();
-
-            return GetNativeElement(rootElementSchema, elementName);
         }
         
         /// <summary>
         /// Imports a schema.
         /// </summary>
         /// <param name="schema">The schema.</param>
-        public void ImportSchema(XmlSchema schema)
+        private void ImportSchema(XmlSchema schema)
         {
             foreach(XmlSchemaElement schemaElement in schema.Elements)
             {
@@ -385,9 +499,12 @@ namespace NEsper.Catalyst.Common
         /// <param name="schemaSet">The schema set.</param>
         public void ImportSchemas(XmlSchemaSet schemaSet)
         {
-            foreach(XmlSchema schema in schemaSet.Schemas())
+            using (ScopedInstance<XmlSchemaSet>.Set(schemaSet))
             {
-                ImportSchema(schema);
+                foreach (XmlSchema schema in schemaSet.Schemas())
+                {
+                    ImportSchema(schema);
+                }
             }
         }
 
