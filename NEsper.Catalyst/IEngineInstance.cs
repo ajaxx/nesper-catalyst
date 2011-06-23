@@ -63,6 +63,13 @@ namespace NEsper.Catalyst
         IEnumerable<StatementDescriptor> GetStatements();
 
         /// <summary>
+        /// Creates a statement based on the prepared statement.
+        /// </summary>
+        /// <param name="statementCreationArgs">The statement creation args.</param>
+        /// <returns></returns>
+        StatementDescriptor CreatePrepared(StatementCreationArgs statementCreationArgs);
+
+        /// <summary>
         /// Creates a statement based off the pattern that is presented.
         /// </summary>
         /// <param name="creationArgs">The epl statement.</param>

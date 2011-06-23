@@ -19,10 +19,11 @@ using com.espertech.esper.client.soda;
 using com.espertech.esper.compat;
 using com.espertech.esper.compat.logging;
 using com.espertech.esper.util;
-using NEsper.Catalyst.Common;
 
 namespace NEsper.Catalyst.Client
 {
+    using Common;
+
     using TypeMap = IDictionary<string, object>;
 
     public class CatalystAdministrator
@@ -678,7 +679,7 @@ namespace NEsper.Catalyst.Client
         /// <throws>EPException when the prepared statement was not valid</throws>
         public EPStatement Create(EPPreparedStatement prepared, string statementName)
         {
-            throw new NotSupportedException();
+            return Create(prepared, statementName, null);
         }
 
         /// <summary>
@@ -701,7 +702,35 @@ namespace NEsper.Catalyst.Client
         /// <throws>EPException when the prepared statement was not valid</throws>
         public EPStatement Create(EPPreparedStatement prepared, string statementName, object userObject)
         {
-            throw new NotSupportedException();
+            if (prepared == null)
+            {
+                throw new ArgumentNullException("prepared");
+            }
+
+            var cprepared = prepared as CatalystPreparedStatement;
+            if (cprepared == null)
+            {
+                throw new ArgumentException("prepared statement was of incorrect type", "prepared");
+            }
+
+            using (var wrapper = CreateControlManager())
+            {
+                return WithExceptionHandling(
+                    delegate
+                    {
+                        var controlManager = wrapper.Channel;
+                        var statementArgs = new StatementCreationArgs();
+                        statementArgs.PreparedStatementId = cprepared.Id;
+                        statementArgs.StatementName = statementName;
+                        statementArgs.StatementText = null;
+
+                        var statement = controlManager.CreatePrepared(_instanceId, statementArgs);
+                        var statementWrapper = new CatalystStatement(_adapter, statement, userObject);
+                        BindStatement(statementWrapper);
+
+                        return statementWrapper;
+                    });
+            }
         }
 
         /// <summary>
@@ -714,7 +743,7 @@ namespace NEsper.Catalyst.Client
         /// <throws>EPException when the expression was not valid</throws>
         public EPStatement Create(EPPreparedStatement prepared)
         {
-            throw new NotSupportedException();
+            return Create(prepared, null, null);
         }
 
         #endregion

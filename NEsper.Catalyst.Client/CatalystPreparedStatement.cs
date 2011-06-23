@@ -6,15 +6,11 @@
 ///////////////////////////////////////////////////////////////////////////////////////
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
 
 using com.espertech.esper.client;
 
 namespace NEsper.Catalyst.Client
 {
-    using Common;
-
     class CatalystPreparedStatement : EPPreparedStatement
     {
         /// <summary>

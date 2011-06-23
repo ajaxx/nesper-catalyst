@@ -179,6 +179,57 @@ namespace NEsper.Catalyst
         }
 
         /// <summary>
+        /// Gets the prepared statement.
+        /// </summary>
+        /// <param name="statementId">The statement id.</param>
+        /// <returns></returns>
+        private EPPreparedStatement GetPreparedStatement(string statementId)
+        {
+            lock (_preparedStatementTable)
+            {
+                return _preparedStatementTable.Get(statementId);
+            }
+        }
+
+        /// <summary>
+        /// Creates a statement based on the prepared statement.
+        /// </summary>
+        /// <param name="statementCreationArgs">The statement creation args.</param>
+        /// <returns></returns>
+        public StatementDescriptor CreatePrepared(StatementCreationArgs statementCreationArgs)
+        {
+            if (statementCreationArgs.PreparedStatementId == null)
+            {
+                throw new EPException("invalid statement arguments - missing prepared statement id");
+            }
+
+            var preparedStatement = GetPreparedStatement(statementCreationArgs.PreparedStatementId);
+            if (preparedStatement != null)
+            {
+                var administrator = ServiceProvider.EPAdministrator;
+                var statementDescriptor = new StatementDescriptor();
+                var statement = administrator.Create(
+                    preparedStatement,
+                    statementCreationArgs.StatementName,
+                    statementDescriptor);
+
+                var publishers = _eventPublisherFactories
+                    .Select(factory => factory.CreatePublisher(new EventPublisherArgs(ServiceProvider.EPRuntime, statement)));
+
+                if (StatementCreated != null)
+                {
+                    StatementCreated(this, new StatementCreationEventArgs(this, statement));
+                }
+
+                statementDescriptor.Id = statement.Name;
+                statementDescriptor.URIs = publishers.Select(publisher => publisher.URI.ToString()).ToArray();
+                return statementDescriptor;
+            }
+         
+            throw new EPException("prepared statement does not exist");
+        }
+
+        /// <summary>
         /// Creates a statement based off the pattern that is presented.
         /// </summary>
         /// <param name="creationArgs">The epl statement.</param>

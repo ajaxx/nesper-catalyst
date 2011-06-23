@@ -254,7 +254,27 @@ namespace NEsper.Catalyst
 
             throw new WebFaultException(HttpStatusCode.NotFound);
         }
-        
+
+        /// <summary>
+        /// Creates a statement from a prepared statement.
+        /// </summary>
+        /// <param name="instanceId">The instance id.</param>
+        /// <param name="statementArgs">The statement args.</param>
+        /// <returns></returns>
+        public StatementDescriptor CreatePrepared(string instanceId, StatementCreationArgs statementArgs)
+        {
+            try
+            {
+                var instance = GetInstanceOrFault(instanceId);
+                return instance.CreatePrepared(statementArgs);
+            }
+            catch (EPException e)
+            {
+                Log.Warn("CreateEPL: BadRequest returned: {0}", e.Message);
+                throw new WebFaultException<string>(e.Message, HttpStatusCode.BadRequest);
+            }
+        }
+
         /// <summary>
         /// Creates a statement based off the pattern that is presented.
         /// </summary>

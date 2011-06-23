@@ -82,6 +82,16 @@ namespace NEsper.Catalyst.Common
         StatementDescriptorCollection GetStatements(string instanceId);
 
         /// <summary>
+        /// Creates a statement from a prepared statement.
+        /// </summary>
+        /// <param name="instanceId">The instance id.</param>
+        /// <param name="statementArgs">The statement args.</param>
+        /// <returns></returns>
+        [OperationContract]
+        [WebInvoke(UriTemplate = "/instance/{instanceId}/create/prepared", Method = "POST")]
+        StatementDescriptor CreatePrepared(string instanceId, StatementCreationArgs statementArgs);
+
+        /// <summary>
         /// Creates a statement based off the pattern that is presented.
         /// </summary>
         /// <param name="instanceId">The instance id.</param>

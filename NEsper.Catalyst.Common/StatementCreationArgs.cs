@@ -26,5 +26,12 @@ namespace NEsper.Catalyst.Common
         /// <value>The name of the statement.</value>
         [DataMember]
         public string StatementName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the prepared statement id.
+        /// </summary>
+        /// <value>The prepared statement id.</value>
+        [DataMember]
+        public string PreparedStatementId { get; set; }
     }
 }
