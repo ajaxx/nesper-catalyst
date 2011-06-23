@@ -759,7 +759,48 @@ namespace NEsper.Catalyst.Client
         /// <throws>EPException indicates compilation errors.</throws>
         public EPPreparedStatement PreparePattern(string patternExpression)
         {
-            throw new NotSupportedException();
+            using (var wrapper = CreateControlManager())
+            {
+                return WithExceptionHandling(
+                    delegate
+                    {
+                        var controlManager = wrapper.Channel;
+                        var statementArgs = new StatementCreationArgs();
+                        statementArgs.StatementText = patternExpression;
+
+                        var preparationId = controlManager.PreparePattern(_instanceId, statementArgs);
+                        var statementWrapper = new CatalystPreparedStatement(_adapter, _instanceId, preparationId);
+                        return statementWrapper;
+                    });
+            }
+        }
+
+        /// <summary>
+        /// Sets the value of the designated parameter using the given object.
+        /// </summary>
+        /// <param name="statementId">The statement id.</param>
+        /// <param name="parameterIndex">the first parameter is 1, the second is 2, ...</param>
+        /// <param name="value">the object containing the input parameter value</param>
+        /// <exception name="EPException">if the substitution parameter could not be located</exception>
+	    public void SetObject(string statementId, int parameterIndex, Object value)
+        {
+            using (var wrapper = CreateControlManager())
+            {
+                WithExceptionHandling(
+                    delegate
+                    {
+                        var controlManager = wrapper.Channel;
+                        var preparedValueArgs = new PreparedValueArgs();
+                        preparedValueArgs.DataType = value.GetType().FullName;
+                        preparedValueArgs.Data = SerializationFabric.Serialize(value);
+                        preparedValueArgs.ParameterIndex = parameterIndex;
+
+                        controlManager.SetPreparedValue(
+                            _instanceId,
+                            statementId,
+                            preparedValueArgs);
+                    });
+            }
         }
 
         #endregion

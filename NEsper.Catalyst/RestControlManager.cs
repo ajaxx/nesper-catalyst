@@ -321,14 +321,35 @@ namespace NEsper.Catalyst
             try
             {
                 var instance = GetInstanceOrFault(instanceId);
-                //var prepared = instance.PrepareEPL(creationArgs.StatementText);
-                throw new NotImplementedException();
+                return instance.PrepareEPL(creationArgs.StatementText);
             }
             catch (EPException e)
             {
-                Log.Warn("Compile: BadRequest returned: {0}", e.Message);
+                Log.Warn("PrepareEPL: BadRequest returned: {0}", e.Message);
                 throw new WebFaultException<string>(e.Message, HttpStatusCode.BadRequest);
             }
+        }
+
+        /// <summary>
+        /// Creates a prepared statement based off the pattern that is presented.  The value
+        /// that is returned is a unique identifier to the representation of the prepared
+        /// statement on the server.  It is the prepared statement id.
+        /// </summary>
+        /// <param name="instanceId">The instance id.</param>
+        /// <param name="creationArgs">The creation args.</param>
+        /// <returns></returns>
+        public string PreparePattern(string instanceId, StatementCreationArgs creationArgs)
+        {
+            try
+            {
+                var instance = GetInstanceOrFault(instanceId);
+                return instance.PreparePattern(creationArgs.StatementText);
+            }
+            catch (EPException e)
+            {
+                Log.Warn("PreparePattern: BadRequest returned: {0}", e.Message);
+                throw new WebFaultException<string>(e.Message, HttpStatusCode.BadRequest);
+            } 
         }
 
         /// <summary>
@@ -336,10 +357,27 @@ namespace NEsper.Catalyst
         /// </summary>
         /// <param name="instanceId">The instance id.</param>
         /// <param name="statementId">The statement id.</param>
-        /// <param name="value">The value.</param>
-        public void SetPreparedValue(string instanceId, string statementId, object value)
+        /// <param name="preparedValueArgs">The prepared value args.</param>
+        public void SetPreparedValue(string instanceId, string statementId, PreparedValueArgs preparedValueArgs)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var instance = GetInstanceOrFault(instanceId);
+                var fabricator = instance.SchemaFabricator;
+                var fabricationValue = fabricator.Fabricate(
+                    preparedValueArgs.Data,
+                    preparedValueArgs.DataType);
+
+                instance.SetPreparedValue(
+                    statementId,
+                    preparedValueArgs.ParameterIndex,
+                    fabricationValue);
+            }
+            catch (EPException e)
+            {
+                Log.Warn("Compile: BadRequest returned: {0}", e.Message);
+                throw new WebFaultException<string>(e.Message, HttpStatusCode.BadRequest);
+            }
         }
 
         /// <summary>
@@ -397,11 +435,11 @@ namespace NEsper.Catalyst
         {
             try {
                 var instance = GetInstanceOrFault(instanceId);
+                var fabricator = instance.SchemaFabricator;
                 var eventBytes = System.Text.Encoding.UTF8.GetBytes(@event.EventData);
                 var dictionaryReader = JsonReaderWriterFactory.CreateJsonReader(
                         eventBytes, 0, eventBytes.Length, new XmlDictionaryReaderQuotas());
     
-                var fabricator = instance.SchemaFabricator;
                 var fabricatorType = fabricator.GetType(@event.EventType);
                 if (fabricatorType != null)
                 {

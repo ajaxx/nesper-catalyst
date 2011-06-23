@@ -10,9 +10,12 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
 using System.Reflection;
+using System.Security.Cryptography;
+using System.Text;
 using System.Xml.Linq;
 
 using com.espertech.esper.client.soda;
+using com.espertech.esper.compat;
 using com.espertech.esper.compat.logging;
 using com.espertech.esper.events;
 
@@ -64,6 +67,12 @@ namespace NEsper.Catalyst
         /// Schema fabricator for this engine.
         /// </summary>
         public SchemaFabricator SchemaFabricator { get; private set; }
+
+        /// <summary>
+        /// Table of prepared statements.
+        /// </summary>
+        private readonly IDictionary<string, EPPreparedStatement> _preparedStatementTable =
+            new Dictionary<string, EPPreparedStatement>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EngineInstance"/> class.
@@ -231,6 +240,76 @@ namespace NEsper.Catalyst
             var administrator = ServiceProvider.EPAdministrator;
             var statementObjectModel = administrator.CompileEPL(creationArgs.StatementText);
             return statementObjectModel;
+        }
+
+        /// <summary>
+        /// Prepares the EPL.
+        /// </summary>
+        /// <param name="statementText">The statement text.</param>
+        /// <returns></returns>
+        public string PrepareEPL(string statementText)
+        {
+            var sha256 = SHA256.Create();
+            var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(statementText));
+            var hashText = BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
+            lock (_preparedStatementTable)
+            {
+                if (!_preparedStatementTable.ContainsKey(hashText))
+                {
+                    var administrator = ServiceProvider.EPAdministrator;
+                    var preparedStatement = administrator.PrepareEPL(statementText);
+                    var preparedStatementId = hashText;
+                    _preparedStatementTable[preparedStatementId] = preparedStatement;
+                }
+            }
+
+            return hashText;
+        }
+
+        /// <summary>
+        /// Prepares the pattern.
+        /// </summary>
+        /// <param name="statementText">The statement text.</param>
+        public string PreparePattern(string statementText)
+        {
+            var sha256 = SHA256.Create();
+            var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(statementText));
+            var hashText = BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
+            lock (_preparedStatementTable)
+            {
+                if (!_preparedStatementTable.ContainsKey(hashText))
+                {
+                    var administrator = ServiceProvider.EPAdministrator;
+                    var preparedStatement = administrator.PreparePattern(statementText);
+                    var preparedStatementId = hashText;
+                    _preparedStatementTable[preparedStatementId] = preparedStatement;
+                }
+            }
+
+            return hashText; 
+        }
+
+        /// <summary>
+        /// Sets the prepared value.
+        /// </summary>
+        /// <param name="statementId">The statement id.</param>
+        /// <param name="parameterIndex">Index of the parameter.</param>
+        /// <param name="value">The value.</param>
+        public void SetPreparedValue(string statementId, int parameterIndex, object value)
+        {
+            lock (_preparedStatementTable)
+            {
+                var preparedStatement = _preparedStatementTable.Get(statementId);
+                if (preparedStatement != null)
+                {
+                    preparedStatement.SetObject(
+                        parameterIndex, value);
+                }
+                else
+                {
+                    throw new EPException("prepared statement does not exist");
+                }
+            }
         }
 
         /// <summary>

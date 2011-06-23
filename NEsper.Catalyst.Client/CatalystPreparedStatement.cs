@@ -35,13 +35,19 @@ namespace NEsper.Catalyst.Client
         /// <value>The adapter.</value>
         internal Catalyst Adapter { get; private set; }
 
+        /// <summary>
+        /// Gets or sets the instance.
+        /// </summary>
+        /// <value>The instance.</value>
+        internal CatalystInstance Instance { get; private set; }
+
 	    /// <summary>Sets the value of the designated parameter using the given object.</summary>
 	    /// <param name="parameterIndex">the first parameter is 1, the second is 2, ...</param>
 	    /// <param name="value">the object containing the input parameter value</param>
 	    /// <exception name="EPException">if the substitution parameter could not be located</exception>
 	    public void SetObject(int parameterIndex, Object value)
 	    {
-
+	        Instance.Administrator.SetObject(Id, parameterIndex, value);
 	    }
 
         /// <summary>
@@ -53,6 +59,7 @@ namespace NEsper.Catalyst.Client
         public CatalystPreparedStatement(Catalyst adapter, string instanceId, string id)
         {
             Adapter = adapter;
+            Instance = adapter.GetInstance(instanceId);
             InstanceId = instanceId;
             Id = id;
         }

@@ -59,6 +59,15 @@ namespace NEsper.Catalyst.Client
         /// Occurs when a native type is registered.
         /// </summary>
         event EventHandler<TypeEventArgs> TypeRegistered;
+
+        /// <summary>
+        /// Sets the value of the designated parameter using the given object.
+        /// </summary>
+        /// <param name="statementId">The statement id.</param>
+        /// <param name="parameterIndex">the first parameter is 1, the second is 2, ...</param>
+        /// <param name="value">the object containing the input parameter value</param>
+        /// <exception name="EPException">if the substitution parameter could not be located</exception>
+        void SetObject(string statementId, int parameterIndex, Object value);
     }
 
     public class TypeEventArgs : EventArgs

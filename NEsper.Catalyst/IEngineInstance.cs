@@ -107,5 +107,25 @@ namespace NEsper.Catalyst
         /// <param name="map">The map.</param>
         /// <param name="eventTypeName">Name of the event type.</param>
         void SendEvent(IDictionary<string, object> map, string eventTypeName);
+
+        /// <summary>
+        /// Prepares the EPL.
+        /// </summary>
+        /// <param name="statementText">The statement text.</param>
+        string PrepareEPL(string statementText);
+
+        /// <summary>
+        /// Prepares the pattern.
+        /// </summary>
+        /// <param name="statementText">The statement text.</param>
+        string PreparePattern(string statementText);
+
+        /// <summary>
+        /// Sets the prepared value.
+        /// </summary>
+        /// <param name="statementId">The statement id.</param>
+        /// <param name="parameterIndex">Index of the parameter.</param>
+        /// <param name="value">The value.</param>
+        void SetPreparedValue(string statementId, int parameterIndex, object value);
     }
 }
