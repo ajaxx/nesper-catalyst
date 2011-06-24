@@ -13,6 +13,7 @@ using System.Xml;
 using System.Xml.Schema;
 
 using com.espertech.esper.compat;
+using com.espertech.esper.util;
 
 namespace NEsper.Catalyst.Common
 {
@@ -422,6 +423,11 @@ namespace NEsper.Catalyst.Common
 
             var elementName = element.QualifiedName.Name;
             var elementType = GetNativeType(element.ElementSchemaType);
+            if (element.IsNillable)
+            {
+                elementType = elementType.GetBoxedType();
+            }
+
             var elementTypeReduced = false;
 
             if (element.MaxOccurs > 1)
