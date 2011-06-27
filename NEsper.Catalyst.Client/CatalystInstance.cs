@@ -39,7 +39,7 @@ namespace NEsper.Catalyst.Client
         {
             Adapter = adapter;
             Administrator = new CatalystAdministrator(adapter, instanceId);
-            Runtime = new CatalystRuntime(adapter, instanceId);
+            Runtime = new CatalystRuntime(adapter, (CatalystAdministrator) Administrator, instanceId);
         }
     }
 }

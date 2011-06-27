@@ -7,19 +7,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Json;
 using System.ServiceModel.Web;
-using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 
 using com.espertech.esper.client;
 using com.espertech.esper.client.util;
-using com.espertech.esper.compat;
-using com.espertech.esper.util;
 
 namespace NEsper.Catalyst.Client
 {
@@ -29,6 +22,7 @@ namespace NEsper.Catalyst.Client
         : EPRuntime
     {
         private readonly Catalyst _adapter;
+        private readonly CatalystAdministrator _administrator;
         private readonly WebChannelFactory<IControlManager> _webChannelFactory;
         private readonly string _instanceId;
         private ChannelWrapper<IControlManager> _controlManagerWrapper;
@@ -47,9 +41,10 @@ namespace NEsper.Catalyst.Client
         /// </summary>
         /// <param name="adapter">The catalyst adapter.</param>
         /// <param name="instanceId">The instance id.</param>
-        public CatalystRuntime(Catalyst adapter, string instanceId)
+        public CatalystRuntime(Catalyst adapter, CatalystAdministrator administrator, string instanceId)
         {
             _adapter = adapter;
+            _administrator = administrator;
             _webChannelFactory = adapter.WebChannelFactory;
             _instanceId = instanceId;
         }
@@ -75,6 +70,14 @@ namespace NEsper.Catalyst.Client
         /// <param name="obj">is the event to sent to the runtime</param>
         public void SendEvent(object obj)
         {
+            if (obj == null)
+            {
+                throw new ArgumentNullException("obj");
+            }
+
+            // register the type just incase it hasn't been
+            _administrator.RegisterType(obj.GetType());
+
             var controlManager = GetControlManager();
             var serialized = SerializationFabric.Serialize(obj);
             var eventArgs = new JsonEvent(obj.GetType().FullName, serialized);
