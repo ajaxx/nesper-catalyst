@@ -28,7 +28,7 @@ namespace NEsper.Catalyst.Common
             }
 
             var renderingOptions = new XMLRenderingOptions();
-            renderingOptions.IsDefaultAsAttribute = true;
+            renderingOptions.IsDefaultAsAttribute = false;
             renderingOptions.PreventLooping = true;
 
             var elementRendererImpl = new XElementRendererImpl(eventBean.EventType, renderingOptions);
@@ -45,9 +45,14 @@ namespace NEsper.Catalyst.Common
         /// <returns></returns>
         public static XElement ToXElement(this EventBean[] eventBeans, string elementName)
         {
-            return new XElement(
-                elementName,
-                eventBeans.Select(ToXElement).Cast<object>().ToArray());
+            if (eventBeans != null)
+            {
+                return new XElement(
+                    elementName,
+                    eventBeans.Select(ToXElement).Cast<object>().ToArray());
+            } 
+            
+            return new XElement(elementName);
         }
 
         /// <summary>

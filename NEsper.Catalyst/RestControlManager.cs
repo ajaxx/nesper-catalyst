@@ -12,21 +12,21 @@ using System.Linq;
 using System.Net;
 using System.Runtime.Serialization.Json;
 using System.ServiceModel;
-using System.ServiceModel.Activation;
 using System.ServiceModel.Description;
 using System.ServiceModel.Web;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Schema;
+
 using com.espertech.esper.client;
 using com.espertech.esper.client.soda;
 using com.espertech.esper.compat.logging;
 using com.espertech.esper.util;
-using NEsper.Catalyst.Configuration;
 
 namespace NEsper.Catalyst
 {
     using Common;
+    using Configuration;
 
     /// <summary>
     /// Exposes service points via REST.
@@ -40,7 +40,7 @@ namespace NEsper.Catalyst
         /// <summary>
         /// Engine manager the control manager exposes.
         /// </summary>
-        private EngineManager _engineManager;
+        private readonly EngineManager _engineManager;
         /// <summary>
         /// Service host
         /// </summary>

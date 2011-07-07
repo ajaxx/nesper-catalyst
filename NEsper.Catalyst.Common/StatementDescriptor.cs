@@ -31,12 +31,20 @@ namespace NEsper.Catalyst.Common
         [DataMember]
         public string[] URIs { get; set; }
 
-        /// <summary>Returns true if statement is a pattern</summary>
+        /// <summary>
+        /// Returns true if statement is a pattern
+        /// </summary>
+        /// <value>
+        /// 	<c>true</c> if this instance is pattern; otherwise, <c>false</c>.
+        /// </value>
         /// <returns>true if statement is a pattern</returns>
         [DataMember]
         public bool IsPattern { get; set; }
 
-        /// <summary>Gets the statement's current state</summary>
+        /// <summary>
+        /// Gets the statement's current state
+        /// </summary>
+        /// <value>The state.</value>
         [DataMember]
         public EPStatementState State { get; set; }
     }

@@ -9,7 +9,6 @@ using System.Linq;
 using System.Xml.Linq;
 
 using com.espertech.esper.client;
-using com.espertech.esper.events.xml;
 
 namespace NEsper.Catalyst.Client
 {
@@ -24,12 +23,12 @@ namespace NEsper.Catalyst.Client
             var oldEvents = eventElement
                 .Element("old")
                 .Elements()
-                .Select(element => new XEventBean(element, null))
+                .Select(element => new CatalystEventBean(element, null))
                 .ToArray();
             var newEvents = eventElement
                 .Element("new")
                 .Elements()
-                .Select(element => new XEventBean(element, null))
+                .Select(element => new CatalystEventBean(element, null))
                 .ToArray();
 
             // construct event args

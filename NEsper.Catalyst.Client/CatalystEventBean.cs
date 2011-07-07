@@ -7,6 +7,7 @@
 
 using System;
 using System.Xml.Linq;
+using System.Xml.Schema;
 using System.Xml.XPath;
 using com.espertech.esper.client;
 
@@ -65,7 +66,41 @@ namespace NEsper.Catalyst.Client
                     throw new PropertyAccessException("Property named '" + property + "' is not a valid property name for this type");
                 }
 
-                return element;
+                XAttribute typeAttribute = element.Attribute("type");
+                if (typeAttribute == null)
+                {
+                    return element.Value; // aggregate type, you get to do the hard work
+                }
+
+                XmlTypeCode typeCode;
+                if (!Enum.TryParse(typeAttribute.Value, true, out typeCode))
+                {
+                    return element.Value;
+                }
+                
+                switch(typeCode)
+                {
+                    case XmlTypeCode.String:
+                        return Convert.ToString(element.Value);
+                    case XmlTypeCode.Integer:
+                        return Convert.ToInt32(element.Value);
+                    case XmlTypeCode.Long:
+                        return Convert.ToInt64(element.Value);
+                    case XmlTypeCode.Short:
+                        return Convert.ToInt16(element.Value);
+                    case XmlTypeCode.DateTime:
+                        return Convert.ToDateTime(element.Value);
+                    case XmlTypeCode.Float:
+                        return Convert.ToSingle(element.Value);
+                    case XmlTypeCode.Double:
+                        return Convert.ToDouble(element.Value);
+                    case XmlTypeCode.Decimal:
+                        return Convert.ToDecimal(element.Value);
+                    case XmlTypeCode.Boolean:
+                        return Convert.ToBoolean(element.Value);
+                }
+
+                return element.Value;
             }
         }
 

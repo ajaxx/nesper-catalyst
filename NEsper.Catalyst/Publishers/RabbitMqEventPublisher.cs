@@ -56,7 +56,7 @@ namespace NEsper.Catalyst.Publishers
         /// <param name="eventArgs">The <see cref="com.espertech.esper.client.UpdateEventArgs"/> instance containing the event data.</param>
         public void SendEvent(UpdateEventArgs eventArgs)
         {
-            var eventElement = eventArgs.ToXElement();
+            var eventElement = Common.EventExtensions.ToXElement(eventArgs);
             var eventContent = Encoding.Unicode.GetBytes(eventElement.ToString(SaveOptions.None));
 
             var basicProperties = _model.CreateBasicProperties();
