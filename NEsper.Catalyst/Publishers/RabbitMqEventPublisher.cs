@@ -10,6 +10,7 @@ using System.Collections;
 using System.Text;
 using System.Xml.Linq;
 using com.espertech.esper.client;
+using com.espertech.esper.compat.logging;
 using RabbitMQ.Client;
 
 namespace NEsper.Catalyst.Publishers
@@ -58,9 +59,11 @@ namespace NEsper.Catalyst.Publishers
             var basicProperties = _model.CreateBasicProperties();
             basicProperties.DeliveryMode = 1;
 
-            Console.WriteLine("basicPublisher: {0}", _address);
+            Log.Info("SendEvent: {0}", _address);
 
             _model.BasicPublish(_address, basicProperties, eventContent);
         }
+
+        private static readonly ILog Log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
     }
 }
