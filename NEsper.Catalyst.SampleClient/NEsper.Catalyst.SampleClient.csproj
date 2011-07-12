@@ -99,6 +99,9 @@
     <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="NEsper">
+      <HintPath>..\lib\NEsper.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Runtime.Serialization" />
@@ -118,10 +121,6 @@
     <Compile Include="SampleClientMain.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\NEsper\NEsper\NEsper\NEsper.csproj">
-      <Project>{8376DC7A-06AC-40F1-9338-9AC5AF788356}</Project>
-      <Name>NEsper %28NEsper\NEsper%29</Name>
-    </ProjectReference>
     <ProjectReference Include="..\NEsper.Catalyst.Client\NEsper.Catalyst.Client.csproj">
       <Project>{010127CC-47A6-449E-B5BE-E7AF23BE92DF}</Project>
       <Name>NEsper.Catalyst.Client</Name>

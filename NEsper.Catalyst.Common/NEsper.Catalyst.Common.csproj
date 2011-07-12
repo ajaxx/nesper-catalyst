@@ -95,6 +95,9 @@
     <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="NEsper">
+      <HintPath>..\lib\NEsper.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Runtime.Serialization" />
@@ -128,12 +131,6 @@
     <Compile Include="SerializationFabric.cs" />
     <Compile Include="StatementCreationArgs.cs" />
     <Compile Include="StatementDescriptor.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\NEsper\NEsper\NEsper\NEsper.csproj">
-      <Project>{8376DC7A-06AC-40F1-9338-9AC5AF788356}</Project>
-      <Name>NEsper %28NEsper\NEsper%29</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

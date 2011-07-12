@@ -95,6 +95,9 @@
     <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="NEsper">
+      <HintPath>..\lib\NEsper.dll</HintPath>
+    </Reference>
     <Reference Include="RabbitMQ.Client, Version=2.4.1.0, Culture=neutral, PublicKeyToken=89e7d7c5feba84ce, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\lib\RabbitMQ.Client.dll</HintPath>
@@ -136,10 +139,6 @@
     <Compile Include="SyntheticType.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\NEsper\NEsper\NEsper\NEsper.csproj">
-      <Project>{8376DC7A-06AC-40F1-9338-9AC5AF788356}</Project>
-      <Name>NEsper %28NEsper\NEsper%29</Name>
-    </ProjectReference>
     <ProjectReference Include="..\NEsper.Catalyst.Common\NEsper.Catalyst.Common.csproj">
       <Project>{46EFFBBE-CB91-4A99-A61F-207C3D58DFD7}</Project>
       <Name>NEsper.Catalyst.Common</Name>

@@ -99,12 +99,30 @@
     <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Antlr3.Runtime">
+      <HintPath>..\lib\Antlr3.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="Antlr3.Utility">
+      <HintPath>..\lib\Antlr3.Utility.dll</HintPath>
+    </Reference>
+    <Reference Include="CGLib">
+      <HintPath>..\lib\CGLib.dll</HintPath>
+    </Reference>
     <Reference Include="log4net">
       <HintPath>..\lib\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="NEsper">
+      <HintPath>..\lib\NEsper.dll</HintPath>
+    </Reference>
+    <Reference Include="NEsper.Runtime">
+      <HintPath>..\lib\NEsper.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="RabbitMQ.Client, Version=2.4.1.0, Culture=neutral, PublicKeyToken=89e7d7c5feba84ce, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\lib\RabbitMQ.Client.dll</HintPath>
+    </Reference>
+    <Reference Include="StringTemplate">
+      <HintPath>..\lib\StringTemplate.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
@@ -151,18 +169,6 @@
     <Compile Include="RestControlManager.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\NEsper\CGLib\CGLib.csproj">
-      <Project>{C05D6633-77BF-4985-80F9-EE4F03BAC83E}</Project>
-      <Name>CGLib</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\NEsper\NEsper\NEsper.Runtime\NEsper.Runtime.csproj">
-      <Project>{D7A8B523-B181-4954-B32B-2E1EEB42989A}</Project>
-      <Name>NEsper.Runtime</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\NEsper\NEsper\NEsper\NEsper.csproj">
-      <Project>{8376DC7A-06AC-40F1-9338-9AC5AF788356}</Project>
-      <Name>NEsper %28NEsper\NEsper%29</Name>
-    </ProjectReference>
     <ProjectReference Include="..\NEsper.Catalyst.Common\NEsper.Catalyst.Common.csproj">
       <Project>{46EFFBBE-CB91-4A99-A61F-207C3D58DFD7}</Project>
       <Name>NEsper.Catalyst.Common</Name>
