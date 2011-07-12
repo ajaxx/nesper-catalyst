@@ -16,7 +16,6 @@ namespace NEsper.Catalyst.Publishers
 {
     class RabbitMqEventPublisher : IEventPublisher
     {
-        private readonly IConnection _connection;
         private readonly IModel _model;
         private readonly PublicationAddress _address;
 
@@ -29,25 +28,22 @@ namespace NEsper.Catalyst.Publishers
         /// <summary>
         /// Initializes a new instance of the <see cref="RabbitMqEventPublisher"/> class.
         /// </summary>
-        /// <param name="connectionFactory">The connection factory.</param>
-        /// <param name="exchangePath">The exchange path.</param>
-        public RabbitMqEventPublisher(ConnectionFactory connectionFactory, string exchangePath)
+        /// <param name="model">The model.</param>
+        /// <param name="exchangeAddress">The exchange address.</param>
+        /// <param name="address">The address.</param>
+        public RabbitMqEventPublisher(IModel model, String exchangeAddress, PublicationAddress address)
         {
-            URI = new Uri(string.Format("rabbitmq:{0}", exchangePath));
+            var builder = new UriBuilder();
+            builder.Scheme = "rabbitmq";
+            builder.Host = exchangeAddress;
+            builder.Path = string.Format("{0}/{1}", 
+                Uri.EscapeUriString(address.ExchangeName), 
+                Uri.EscapeUriString(address.RoutingKey));
 
-            _connection = connectionFactory.CreateConnection();
-            _model = _connection.CreateModel();
-            _model.ExchangeDeclare(
-                exchangePath,
-                ExchangeType.Fanout,
-                true,
-                true,
-                new Hashtable());
+            URI = builder.Uri;
 
-            _address = new PublicationAddress(
-                ExchangeType.Fanout,
-                exchangePath,
-                string.Empty);
+            _model = model;
+            _address = address;
         }
 
         /// <summary>
@@ -61,6 +57,8 @@ namespace NEsper.Catalyst.Publishers
 
             var basicProperties = _model.CreateBasicProperties();
             basicProperties.DeliveryMode = 1;
+
+            Console.WriteLine("basicPublisher: {0}", _address);
 
             _model.BasicPublish(_address, basicProperties, eventContent);
         }

@@ -235,7 +235,7 @@ namespace NEsper.Catalyst
                 return statementDescriptor;
             }
 
-            throw new WebFaultException(HttpStatusCode.NotFound);
+            throw new WebFaultException<string>(String.Empty, HttpStatusCode.NotFound);
         }
 
         /// <summary>

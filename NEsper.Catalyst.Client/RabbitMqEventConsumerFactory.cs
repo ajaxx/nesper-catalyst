@@ -6,9 +6,14 @@
 ///////////////////////////////////////////////////////////////////////////////////////
 
 using System;
+using System.Collections.Generic;
+using System.Text;
 
 using com.espertech.esper.client;
+using com.espertech.esper.compat;
+
 using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 
 namespace NEsper.Catalyst.Client
 {
@@ -49,7 +54,98 @@ namespace NEsper.Catalyst.Client
         /// <returns></returns>
         public IDisposable Subscribe(Uri uri, EventHandler<UpdateEventArgs> eventHandler)
         {
-            return new RabbitMqEventConsumer(_connectionFactory, uri.LocalPath, eventHandler);
+            var pathParts = uri.Segments;
+            var exchangePath = pathParts[1].TrimEnd('/');
+            var routingKey = pathParts[2];
+
+            // find the exchange path binding
+            ExchangePathBinding exchangePathBinding;
+            if (!_exchangePathBindingTable.TryGetValue(exchangePath, out exchangePathBinding))
+            {
+                exchangePathBinding = new ExchangePathBinding();
+                exchangePathBinding.Connection = _connectionFactory.CreateConnection();
+                exchangePathBinding.Channel = exchangePathBinding.Connection.CreateModel();
+                _exchangePathBindingTable[exchangePath] = exchangePathBinding;
+            }
+
+            // find a queue for this routingKey
+            RouteBinding routeBinding;
+            if (!exchangePathBinding.RoutingKeyTable.TryGetValue(routingKey, out routeBinding))
+            {
+                routeBinding = new RouteBinding();
+                routeBinding.Queue = exchangePathBinding.Channel.QueueDeclare();
+                routeBinding.Consumer = new EventingBasicConsumer();
+                routeBinding.Consumer.Received += routeBinding.HandleEvent;
+
+                exchangePathBinding.RoutingKeyTable[routingKey] = routeBinding;
+
+                exchangePathBinding.Channel.QueueBind(routeBinding.Queue, exchangePath, routingKey);
+                exchangePathBinding.Channel.BasicConsume(routeBinding.Queue, true, routeBinding.Consumer);
+            }
+
+            routeBinding.Events += eventHandler;
+
+            return new TrackedDisposable(
+                () => routeBinding.Events -= eventHandler);
+        }
+
+        class RouteBinding
+        {
+            /// <summary>
+            /// Gets or sets the queue.
+            /// </summary>
+            /// <value>The queue.</value>
+            public string Queue { get; set; }
+
+            /// <summary>
+            /// Gets or sets the consumer.
+            /// </summary>
+            /// <value>The consumer.</value>
+            public EventingBasicConsumer Consumer { get; set; }
+
+            /// <summary>
+            /// Occurs when routed events are consumed.
+            /// </summary>
+            public event EventHandler<UpdateEventArgs> Events;
+
+            /// <summary>
+            /// Handles the event.
+            /// </summary>
+            /// <param name="sender">The sender.</param>
+            /// <param name="args">The <see cref="RabbitMQ.Client.Events.BasicDeliverEventArgs"/> instance containing the event data.</param>
+            public void HandleEvent(IBasicConsumer sender, BasicDeliverEventArgs args)
+            {
+                if (Events != null)
+                {
+                    var elementText = Encoding.Unicode.GetString(args.Body);
+                    var eventArgs = elementText.ToUpdateEventArgs();
+                    // send the event(s) along
+                    Events.Invoke(null, eventArgs);
+                }
+            }
+        }
+
+        private readonly IDictionary<string, ExchangePathBinding> _exchangePathBindingTable =
+            new Dictionary<string, ExchangePathBinding>();
+
+        class ExchangePathBinding
+        {
+            /// <summary>
+            /// Gets or sets the connection.
+            /// </summary>
+            /// <value>The connection.</value>
+            public IConnection Connection { get; set; }
+            /// <summary>
+            /// Gets or sets the channel.
+            /// </summary>
+            /// <value>The channel.</value>
+            public IModel Channel { get; set; }
+
+            /// <summary>
+            /// The routing key table
+            /// </summary>
+            public readonly IDictionary<string, RouteBinding> RoutingKeyTable =
+                new Dictionary<string, RouteBinding>();
         }
     }
 }

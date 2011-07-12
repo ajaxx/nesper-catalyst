@@ -95,7 +95,8 @@
     <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="RabbitMQ.Client">
+    <Reference Include="RabbitMQ.Client, Version=2.4.1.0, Culture=neutral, PublicKeyToken=89e7d7c5feba84ce, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\lib\RabbitMQ.Client.dll</HintPath>
     </Reference>
     <Reference Include="System" />
@@ -123,6 +124,7 @@
     <Compile Include="ICatalystAdministrator.cs" />
     <Compile Include="ICatalystInstance.cs" />
     <Compile Include="IEventConsumerFactory.cs" />
+    <Compile Include="ItemNotFoundException.cs" />
     <Compile Include="MessageExtensions.cs" />
     <Compile Include="MsmqEventConsumer.cs" />
     <Compile Include="MsmqEventConsumerFactory.cs" />

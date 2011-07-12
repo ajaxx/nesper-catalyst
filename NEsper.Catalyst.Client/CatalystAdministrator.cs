@@ -879,16 +879,23 @@ namespace NEsper.Catalyst.Client
 
             using (var wrapper = CreateControlManager())
             {
-                return WithExceptionHandling(
-                    delegate
-                    {
-                        var controlManager = wrapper.Channel;
-                        var statement = controlManager.GetStatement(_instanceId, name);
-                        var statementWrapper = new CatalystStatement(_adapter, statement);
-                        BindStatement(statementWrapper);
+                try
+                {
+                    return WithExceptionHandling(
+                        delegate
+                            {
+                                var controlManager = wrapper.Channel;
+                                var statement = controlManager.GetStatement(_instanceId, name);
+                                var statementWrapper = new CatalystStatement(_adapter, statement);
+                                BindStatement(statementWrapper);
 
-                        return statementWrapper;
-                    });
+                                return statementWrapper;
+                            });
+                } 
+                catch( ItemNotFoundException )
+                {
+                    return null;
+                }
             }
         }
 
@@ -921,7 +928,7 @@ namespace NEsper.Catalyst.Client
             throw new NotSupportedException();
         }
 
-        private static void HandleProtocolException(ProtocolException e)
+        private static void HandleCommunicationException(CommunicationException e)
         {
             var serializer = new DataContractSerializer(typeof(string));
             var webException = e.InnerException as WebException;
@@ -932,6 +939,8 @@ namespace NEsper.Catalyst.Client
                 {
                     switch (httpWebResponse.StatusCode)
                     {
+                        case HttpStatusCode.NotFound:
+                            throw new ItemNotFoundException();
                         case HttpStatusCode.BadRequest:
                             throw new EPException(
                                 (string)serializer.ReadObject(httpWebResponse.GetResponseStream()));
@@ -949,9 +958,9 @@ namespace NEsper.Catalyst.Client
             {
                 action.Invoke();
             }
-            catch (ProtocolException e)
+            catch (CommunicationException e)
             {
-                HandleProtocolException(e);
+                HandleCommunicationException(e);
                 throw;
             }
         }
@@ -962,9 +971,9 @@ namespace NEsper.Catalyst.Client
             {
                 return action.Invoke();
             }
-            catch (ProtocolException e)
+            catch (CommunicationException e)
             {
-                HandleProtocolException(e);
+                HandleCommunicationException(e);
                 throw;
             }
         }
