@@ -6,10 +6,10 @@
 ///////////////////////////////////////////////////////////////////////////////////////
 
 using System;
-
+using System.Xml.Linq;
 using com.espertech.esper.client;
 
-namespace NEsper.Catalyst.Client
+namespace NEsper.Catalyst.Client.Consumers
 {
     public class MsmqEventConsumerFactory
         : IEventConsumerFactory
@@ -18,6 +18,14 @@ namespace NEsper.Catalyst.Client
         /// Initializes a new instance of the <see cref="MsmqEventConsumerFactory"/> class.
         /// </summary>
         public MsmqEventConsumerFactory()
+        {
+        }
+
+        /// <summary>
+        /// Initializes the specified consumer configuration.
+        /// </summary>
+        /// <param name="consumerConfiguration">The consumer configuration.</param>
+        public void Initialize(XElement consumerConfiguration)
         {
         }
 

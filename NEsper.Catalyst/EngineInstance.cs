@@ -48,6 +48,13 @@ namespace NEsper.Catalyst
         public string Name { get; set; }
 
         /// <summary>
+        /// Gets or sets the data publication endpoints.  These endpoints define how
+        /// clients can push information into an engine instance.
+        /// </summary>
+        /// <value>The data publication endpoints.</value>
+        public IEnumerable<Uri> DataPublicationEndpoints { get; private set; }
+
+        /// <summary>
         /// Gets the service provider.
         /// </summary>
         /// <value>The service provider.</value>
@@ -107,11 +114,17 @@ namespace NEsper.Catalyst
                     foreach (var consumerElement in catConfiguration.Consumers.OfType<ConsumerElement>())
                     {
                         var eventConsumer = consumerElement.CreateConsumer();
+                        eventConsumer.SchemaFabricator = SchemaFabricator;
                         eventConsumer.XmlEvent += SendEvent;
                         eventConsumer.DictionaryEvent += (name, @event) => SendEvent(@event, name);
+                        eventConsumer.DataEvent += SendEvent;
                         eventConsumers.Add(eventConsumer);
                     }
                 }
+
+                DataPublicationEndpoints = _eventConsumers
+                    .Select(consumer => consumer.Uri)
+                    .ToList();
 
                 // publishers
                 Log.Info("EngineInstance.ctor: initializing publishers");
@@ -129,6 +142,10 @@ namespace NEsper.Catalyst
                                                            string.Format(@".\private$\esper_{0}", Id))
                                                    };
                 }
+            }
+            else
+            {
+                DataPublicationEndpoints = new List<Uri>();
             }
 
             Log.Info("EngineInstance.ctor: finished");
@@ -223,6 +240,7 @@ namespace NEsper.Catalyst
 
                 statementDescriptor.Id = statement.Name;
                 statementDescriptor.URIs = publishers.Select(publisher => publisher.URI.ToString()).ToArray();
+                statementDescriptor.EventType = statement.EventType.ToXElement();
                 return statementDescriptor;
             }
          
@@ -252,6 +270,7 @@ namespace NEsper.Catalyst
 
             statementDescriptor.Id = statement.Name;
             statementDescriptor.URIs = publishers.Select(publisher => publisher.URI.ToString()).ToArray();
+            statementDescriptor.EventType = statement.EventType.ToXElement();
             return statementDescriptor;
         }
 
@@ -278,6 +297,7 @@ namespace NEsper.Catalyst
 
             statementDescriptor.Id = statement.Name;
             statementDescriptor.URIs = publishers.Select(publisher => publisher.URI.ToString()).ToArray();
+            statementDescriptor.EventType = statement.EventType.ToXElement();
             return statementDescriptor;
         }
 

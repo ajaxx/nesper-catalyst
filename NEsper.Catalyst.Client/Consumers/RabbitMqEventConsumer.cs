@@ -7,10 +7,9 @@
 
 using System;
 using System.Threading;
-
 using com.espertech.esper.client;
 
-namespace NEsper.Catalyst.Client
+namespace NEsper.Catalyst.Client.Consumers
 {
     class RabbitMqEventConsumer : IDisposable
     {

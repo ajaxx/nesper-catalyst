@@ -76,23 +76,8 @@ namespace NEsper.Catalyst.Consumers
 
                 // convert to an XML wrapper
                 var messageInXml = XElement.Parse(messageBody);
-                var messageData = messageInXml.Nodes().OfType<XCData>().FirstOrDefault();
-                if (messageData == null)
-                {
-                    Log.Warn("msmq message missing content node");
-                    return;
-                }
 
-                var contentType = messageInXml.Attribute("content-type");
-                if (contentType == null)
-                {
-                    Log.Warn("msmq message missing content-type attribute");
-                    return;
-                }
-
-                DecodeAndRouteEvent(
-                    contentType.Value,
-                    messageData.Value);
+                DecodeAndRouteEvent(messageInXml);
             } catch(MessageQueueException) {
             } catch(NullReferenceException) {
             } finally {

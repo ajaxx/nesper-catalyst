@@ -99,6 +99,7 @@
       <HintPath>..\lib\NEsper.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.ServiceModel" />
@@ -110,7 +111,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConfigurationExtensions.cs" />
     <Compile Include="DataContractExporter.cs" />
+    <Compile Include="EventTypeExtensions.cs" />
     <Compile Include="NativeEventTypeDefinition.cs" />
     <Compile Include="EngineStatistics.cs" />
     <Compile Include="EventExtensions.cs" />

@@ -39,6 +39,13 @@ namespace NEsper.Catalyst
         string Name { get; }
 
         /// <summary>
+        /// Gets or sets the data publication endpoints.  These endpoints define how
+        /// clients can push information into an engine instance.
+        /// </summary>
+        /// <value>The data publication endpoints.</value>
+        IEnumerable<Uri> DataPublicationEndpoints { get; }
+
+        /// <summary>
         /// Gets the service provider.
         /// </summary>
         /// <value>The service provider.</value>
@@ -96,6 +103,7 @@ namespace NEsper.Catalyst
         /// <param name="statementID">The statement ID.</param>
         void DestroyPattern(string statementID);
 
+#if false
         /// <summary>
         /// Sends a POCO event.
         /// </summary>
@@ -114,6 +122,7 @@ namespace NEsper.Catalyst
         /// <param name="map">The map.</param>
         /// <param name="eventTypeName">Name of the event type.</param>
         void SendEvent(IDictionary<string, object> map, string eventTypeName);
+#endif
 
         /// <summary>
         /// Prepares the EPL.

@@ -7,15 +7,16 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 
+using System.Text;
+using System.Xml.Linq;
 using com.espertech.esper.client;
 using com.espertech.esper.compat;
 
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
-namespace NEsper.Catalyst.Client
+namespace NEsper.Catalyst.Client.Consumers
 {
     public class RabbitMqEventConsumerFactory
         : IEventConsumerFactory
@@ -30,6 +31,14 @@ namespace NEsper.Catalyst.Client
         {
             _connectionFactory = new ConnectionFactory();
             _connectionFactory.Address = address;
+        }
+
+        /// <summary>
+        /// Initializes the specified consumer configuration.
+        /// </summary>
+        /// <param name="consumerConfiguration">The consumer configuration.</param>
+        public void Initialize(XElement consumerConfiguration)
+        {
         }
 
         /// <summary>

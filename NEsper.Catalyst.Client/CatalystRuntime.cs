@@ -7,6 +7,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.ServiceModel.Web;
 using System.Xml;
 using System.Xml.Linq;
@@ -24,8 +25,9 @@ namespace NEsper.Catalyst.Client
         private readonly Catalyst _adapter;
         private readonly CatalystAdministrator _administrator;
         private readonly WebChannelFactory<IControlManager> _webChannelFactory;
-        private readonly string _instanceId;
+        private readonly InstanceDescriptor _instanceDescriptor;
         private ChannelWrapper<IControlManager> _controlManagerWrapper;
+        private readonly IDataPublisher _dataPublisher;
 
         /// <summary>
         /// Gets or sets an event handler to receive events that are unmatched by any statement.
@@ -40,13 +42,18 @@ namespace NEsper.Catalyst.Client
         /// Initializes a new instance of the <see cref="CatalystRuntime"/> class.
         /// </summary>
         /// <param name="adapter">The catalyst adapter.</param>
-        /// <param name="instanceId">The instance id.</param>
-        public CatalystRuntime(Catalyst adapter, CatalystAdministrator administrator, string instanceId)
+        /// <param name="administrator">The administrator.</param>
+        /// <param name="instanceDescriptor">The instance descriptor.</param>
+        public CatalystRuntime(Catalyst adapter, CatalystAdministrator administrator, InstanceDescriptor instanceDescriptor)
         {
             _adapter = adapter;
             _administrator = administrator;
             _webChannelFactory = adapter.WebChannelFactory;
-            _instanceId = instanceId;
+            _instanceDescriptor = instanceDescriptor;
+            _dataPublisher = instanceDescriptor.DataPublicationEndpoints
+                .Where(endpoint => endpoint != null)
+                .Select(endpoint => adapter.DataPublisherFactory.CreatePublisher(endpoint))
+                .FirstOrDefault(publisherFactory => publisherFactory != null);
         }
 
         /// <summary>
@@ -64,6 +71,15 @@ namespace NEsper.Catalyst.Client
         }
 
         /// <summary>
+        /// Gets the event publisher.
+        /// </summary>
+        /// <returns></returns>
+        public IDataPublisher GetEventPublisher()
+        {
+            return _dataPublisher;
+        }
+        
+        /// <summary>
         /// Send an event represented by a plain object to the event stream processing
         /// runtime.
         /// </summary>
@@ -78,10 +94,14 @@ namespace NEsper.Catalyst.Client
             // register the type just incase it hasn't been
             _administrator.RegisterType(obj.GetType());
 
-            var controlManager = GetControlManager();
+            var eventPublisher = GetEventPublisher();
             var serialized = SerializationFabric.Serialize(obj);
             var eventArgs = new JsonEvent(obj.GetType().FullName, serialized);
-            controlManager.SendJsonEvent(_instanceId, eventArgs);
+            var eventElement = new XElement(
+                "json",
+                new XElement("type", new XCData(eventArgs.EventType)),
+                new XElement("data", new XCData(eventArgs.EventData)));
+            eventPublisher.SendEvent(eventElement);
         }
 
         /// <summary>
@@ -98,8 +118,9 @@ namespace NEsper.Catalyst.Client
         public void SendEvent(IDictionary<string, object> map, string eventTypeName)
         {
             var mapEvent = new MapEvent(eventTypeName, map);
-            var controlManager = GetControlManager();
-            controlManager.SendMapEvent(_instanceId, mapEvent);
+            var eventPublisher = GetEventPublisher();
+            var eventElement = new XElement("map", new XAttribute("name", mapEvent.Name), mapEvent.Atoms);
+            eventPublisher.SendEvent(eventElement);
         }
 
         /// <summary>
@@ -112,8 +133,9 @@ namespace NEsper.Catalyst.Client
         /// <param name="element">The element.</param>
         public void SendEvent(XElement element)
         {
-            var controlManager = GetControlManager();
-            controlManager.SendXmlEvent(_instanceId, element);
+            var eventPublisher = GetEventPublisher();
+            var eventElement = new XElement("xml", element);
+            eventPublisher.SendEvent(eventElement);
         }
 
         /// <summary>
@@ -127,9 +149,9 @@ namespace NEsper.Catalyst.Client
         /// <throws>EPException is thrown when the processing of the event lead to an error</throws>
         public void SendEvent(XmlNode node)
         {
-            var controlManager = GetControlManager();
-            var xelement = XElement.Load(new XmlNodeReader(node));
-            controlManager.SendXmlEvent(_instanceId, xelement);
+            var eventPublisher = GetEventPublisher();
+            var eventElement = new XElement("xml", XElement.Load(new XmlNodeReader(node)));
+            eventPublisher.SendEvent(eventElement);
         }
 
         /// <summary>
@@ -178,8 +200,9 @@ namespace NEsper.Catalyst.Client
         /// <throws>EPException is thrown when the processing of the event lead to an error</throws>
         public void Route(XElement element)
         {
-            var controlManager = GetControlManager();
-            controlManager.SendXmlEvent(_instanceId, element);
+            var eventPublisher = GetEventPublisher();
+            var eventElement = new XElement("xml", element);
+            eventPublisher.SendEvent(eventElement);
         }
 
         /// <summary>
@@ -195,9 +218,9 @@ namespace NEsper.Catalyst.Client
         /// <throws>EPException is thrown when the processing of the event lead to an error</throws>
         public void Route(XmlNode node)
         {
-            var controlManager = GetControlManager();
-            var xelement = XElement.Load(new XmlNodeReader(node));
-            controlManager.SendXmlEvent(_instanceId, xelement);
+            var eventPublisher = GetEventPublisher();
+            var eventElement = new XElement("xml", XElement.Load(new XmlNodeReader(node)));
+            eventPublisher.SendEvent(eventElement);
         }
 
         /// <summary>

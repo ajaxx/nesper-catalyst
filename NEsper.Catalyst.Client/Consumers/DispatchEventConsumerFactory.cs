@@ -8,10 +8,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using System.Xml.Linq;
 using com.espertech.esper.client;
 
-namespace NEsper.Catalyst.Client
+namespace NEsper.Catalyst.Client.Consumers
 {
     public class DispatchEventConsumerFactory : IEventConsumerFactory
     {
@@ -39,6 +39,14 @@ namespace NEsper.Catalyst.Client
         public bool CanHandle(Uri uri)
         {
             return Factories.Any(factory => factory.CanHandle(uri));
+        }
+
+        /// <summary>
+        /// Initializes the specified consumer configuration.
+        /// </summary>
+        /// <param name="consumerConfiguration">The consumer configuration.</param>
+        public void Initialize(XElement consumerConfiguration)
+        {
         }
 
         /// <summary>

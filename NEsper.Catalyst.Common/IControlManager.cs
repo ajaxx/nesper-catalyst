@@ -165,33 +165,6 @@ namespace NEsper.Catalyst.Common
         void DestroyPattern(string instanceId, string statementId);
 
         /// <summary>
-        /// Sends an event into the instance.
-        /// </summary>
-        /// <param name="instanceId">The instance id.</param>
-        /// <param name="event">The @event.</param>
-        [OperationContract]
-        [WebInvoke(UriTemplate = "/instance/{instanceId}/event/map", Method = "POST")]
-        void SendMapEvent(string instanceId, MapEvent @event);
-
-        /// <summary>
-        /// Sends an event into the instance.
-        /// </summary>
-        /// <param name="instanceId">The instance id.</param>
-        /// <param name="event">The @event.</param>
-        [OperationContract]
-        [WebInvoke(UriTemplate = "/instance/{instanceId}/event/xml", Method = "POST")]
-        void SendXmlEvent(string instanceId, XElement @event);
-
-        /// <summary>
-        /// Sends an event into the instance.
-        /// </summary>
-        /// <param name="instanceId">The instance id.</param>
-        /// <param name="event">The <see cref="JsonEvent"/> instance containing the event data.</param>
-        [OperationContract]
-        [WebInvoke(UriTemplate = "/instance/{instanceId}/event/json", Method = "POST")]
-        void SendJsonEvent(string instanceId, JsonEvent @event);
-
-        /// <summary>
         /// Registers a type.
         /// </summary>
         /// <param name="instanceId">The instance id.</param>

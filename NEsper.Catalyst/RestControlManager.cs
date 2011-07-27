@@ -10,12 +10,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Runtime.Serialization.Json;
 using System.ServiceModel;
 using System.ServiceModel.Description;
 using System.ServiceModel.Web;
 using System.Xml;
-using System.Xml.Linq;
 using System.Xml.Schema;
 
 using com.espertech.esper.client;
@@ -162,6 +160,8 @@ namespace NEsper.Catalyst
             InstanceDescriptor instanceDescriptor = new InstanceDescriptor();
             instanceDescriptor.Id = engineInstance.Id;
             instanceDescriptor.Name = engineInstance.Name;
+            instanceDescriptor.DataPublicationEndpoints = engineInstance.DataPublicationEndpoints.ToArray();
+
             return instanceDescriptor;
         }
 
@@ -411,6 +411,7 @@ namespace NEsper.Catalyst
             instance.DestroyPattern(statementId);
         }
 
+#if false
         /// <summary>
         /// Sends an event into the instance.
         /// </summary>
@@ -479,6 +480,7 @@ namespace NEsper.Catalyst
                 throw new WebFaultException<string>(e.Message, HttpStatusCode.BadRequest);
             }
         }
+#endif
 
         /// <summary>
         /// Gets statistics for the engine.

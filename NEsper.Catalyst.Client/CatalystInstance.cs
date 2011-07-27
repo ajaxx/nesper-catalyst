@@ -6,6 +6,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////
 
 using com.espertech.esper.client;
+using NEsper.Catalyst.Common;
 
 namespace NEsper.Catalyst.Client
 {
@@ -34,12 +35,12 @@ namespace NEsper.Catalyst.Client
         /// Initializes a new instance of the <see cref="CatalystInstance"/> class.
         /// </summary>
         /// <param name="adapter">The catalyst adapter.</param>
-        /// <param name="instanceId">The instance id.</param>
-        public CatalystInstance(Catalyst adapter, string instanceId)
+        /// <param name="instanceDescriptor">The instance descriptor.</param>
+        internal CatalystInstance(Catalyst adapter, InstanceDescriptor instanceDescriptor)
         {
             Adapter = adapter;
-            Administrator = new CatalystAdministrator(adapter, instanceId);
-            Runtime = new CatalystRuntime(adapter, (CatalystAdministrator) Administrator, instanceId);
+            Administrator = new CatalystAdministrator(adapter, instanceDescriptor.Id);
+            Runtime = new CatalystRuntime(adapter, (CatalystAdministrator) Administrator, instanceDescriptor);
         }
     }
 }

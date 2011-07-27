@@ -103,6 +103,7 @@
       <HintPath>..\lib\RabbitMQ.Client.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Messaging" />
     <Reference Include="System.Runtime.Serialization" />
@@ -122,19 +123,33 @@
     <Compile Include="CatalystStatement.cs" />
     <Compile Include="ChannelWrapper.cs" />
     <Compile Include="CatalystPreparedStatement.cs" />
-    <Compile Include="DispatchEventConsumerFactory.cs" />
+    <Compile Include="CatalystEventType.cs" />
+    <Compile Include="CatalystConfiguration.cs" />
+    <Compile Include="Configuration\CatalystConfigurationSection.cs" />
+    <Compile Include="Configuration\ConsumerCollection.cs" />
+    <Compile Include="Configuration\ConsumerElement.cs" />
+    <Compile Include="Configuration\PublisherCollection.cs" />
+    <Compile Include="Configuration\PublisherElement.cs" />
+    <Compile Include="Consumers\DispatchEventConsumerFactory.cs" />
     <Compile Include="ICatalyst.cs" />
     <Compile Include="ICatalystAdministrator.cs" />
     <Compile Include="ICatalystInstance.cs" />
     <Compile Include="IEventConsumerFactory.cs" />
+    <Compile Include="IDataPublisher.cs" />
+    <Compile Include="IDataPublisherFactory.cs" />
     <Compile Include="ItemNotFoundException.cs" />
     <Compile Include="MessageExtensions.cs" />
-    <Compile Include="MsmqEventConsumer.cs" />
-    <Compile Include="MsmqEventConsumerFactory.cs" />
+    <Compile Include="Consumers\MsmqEventConsumer.cs" />
+    <Compile Include="Consumers\MsmqEventConsumerFactory.cs" />
     <Compile Include="CatalystEventBean.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RabbitMqEventConsumer.cs" />
-    <Compile Include="RabbitMqEventConsumerFactory.cs" />
+    <Compile Include="Consumers\RabbitMqEventConsumer.cs" />
+    <Compile Include="Consumers\RabbitMqEventConsumerFactory.cs" />
+    <Compile Include="Publishers\DataPublisherFactory.cs" />
+    <Compile Include="Publishers\MsmqDataPublisher.cs" />
+    <Compile Include="Publishers\MsmqDataPublisherFactory.cs" />
+    <Compile Include="Publishers\RabbitMqDataPublisher.cs" />
+    <Compile Include="Publishers\RabbitMqDataPublisherFactory.cs" />
     <Compile Include="SyntheticAtom.cs" />
     <Compile Include="SyntheticType.cs" />
   </ItemGroup>
@@ -144,6 +159,7 @@
       <Name>NEsper.Catalyst.Common</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

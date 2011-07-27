@@ -9,6 +9,9 @@ using System;
 using System.Collections.Generic;
 using System.ServiceModel;
 using System.ServiceModel.Web;
+using NEsper.Catalyst.Client.Configuration;
+using NEsper.Catalyst.Client.Consumers;
+using NEsper.Catalyst.Client.Publishers;
 
 namespace NEsper.Catalyst.Client
 {
@@ -19,42 +22,34 @@ namespace NEsper.Catalyst.Client
         private readonly WebChannelFactory<IControlManager> _webChannelFactory;
         private readonly IDictionary<string, CatalystInstance> _instanceTable;
         private readonly DispatchEventConsumerFactory _masterConsumerFactory;
+        private readonly DataPublisherFactory _dataPublisherFactory;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Catalyst"/> class.
         /// </summary>
-        /// <param name="managerUri">The manager URI.</param>
-        /// <param name="consumerFactories">The consumer factories.</param>
-        public Catalyst(Uri managerUri, params IEventConsumerFactory[] consumerFactories)
+        /// <param name="configuration">The configuration.</param>
+        public Catalyst(CatalystConfiguration configuration)
         {
             var webChannelBinding = new WebHttpBinding();
-            _webChannelFactory = new WebChannelFactory<IControlManager>(webChannelBinding, managerUri);
+            _webChannelFactory = new WebChannelFactory<IControlManager>(webChannelBinding, configuration.ManagerUri);
             _instanceTable = new Dictionary<string, CatalystInstance>();
 
-            var dispatchConsumerFactory = new DispatchEventConsumerFactory();
-            foreach (var consumerFactory in consumerFactories) {
-                dispatchConsumerFactory.Factories.Add(consumerFactory);
+            _masterConsumerFactory = new DispatchEventConsumerFactory();
+            foreach (var consumerFactory in configuration.ConsumerFactories) {
+                _masterConsumerFactory.Factories.Add(consumerFactory);
             }
 
-            _masterConsumerFactory = dispatchConsumerFactory;
+            _dataPublisherFactory = new DataPublisherFactory();
+            foreach (var publisherFactory in configuration.PublisherFactories) {
+                _dataPublisherFactory.Factories.Add(publisherFactory);
+            }
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Catalyst"/> class.
         /// </summary>
-        /// <param name="managerUri">The manager URI.</param>
-        public Catalyst(string managerUri)
-            : this(new Uri(managerUri))
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Catalyst"/> class.
-        /// </summary>
-        /// <param name="managerUri">The manager URI.</param>
-        /// <param name="consumerFactories">The consumer factories.</param>
-        public Catalyst(string managerUri, params IEventConsumerFactory[] consumerFactories)
-            : this(new Uri(managerUri), consumerFactories)
+        public Catalyst()
+            : this(CatalystConfigurationSection.GetDefaultConfiguration())
         {
         }
 
@@ -65,6 +60,15 @@ namespace NEsper.Catalyst.Client
         internal DispatchEventConsumerFactory EventConsumerFactory
         {
             get { return _masterConsumerFactory; }
+        }
+
+        /// <summary>
+        /// Gets the master data publisher factory.
+        /// </summary>
+        /// <value>The master data publisher factory.</value>
+        internal DataPublisherFactory DataPublisherFactory
+        {
+            get { return _dataPublisherFactory; }
         }
 
         /// <summary>
@@ -92,10 +96,34 @@ namespace NEsper.Catalyst.Client
         /// <returns></returns>
         public CatalystInstance GetInstance(string instanceId)
         {
-            lock(_instanceTable) {
+            using (var wrapper = CreateControlManager())
+            {
+                var controlManager = wrapper.Channel;
+                var instanceDescriptor = controlManager.GetInstance(instanceId);
+                if (instanceDescriptor != null)
+                {
+                    return GetInstance(instanceDescriptor);
+                }
+
+                throw new ItemNotFoundException();
+            }
+        }
+
+        /// <summary>
+        /// Gets the instance.
+        /// </summary>
+        /// <param name="instanceDescriptor">The instance descriptor.</param>
+        /// <returns></returns>
+        private CatalystInstance GetInstance(InstanceDescriptor instanceDescriptor)
+        {
+            var instanceId = instanceDescriptor.Id;
+
+            lock (_instanceTable)
+            {
                 CatalystInstance instance;
-                if (!_instanceTable.TryGetValue(instanceId, out instance)) {
-                    _instanceTable[instanceId] = instance = new CatalystInstance(this, instanceId);
+                if (!_instanceTable.TryGetValue(instanceId, out instance)) 
+                {
+                    _instanceTable[instanceId] = instance = new CatalystInstance(this, instanceDescriptor);
                 }
 
                 return instance;

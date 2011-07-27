@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Text;
 using System.Threading;
-
+using System.Xml.Linq;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.MessagePatterns;
@@ -37,12 +37,34 @@ namespace NEsper.Catalyst.Consumers
                 _model.QueueBind(_queue, exchangePath, string.Empty);
             }
 
-            _subscription = new Subscription(_model, _queue, true);
+            EventingBasicConsumer eventingBasicConsumer = new EventingBasicConsumer();
+            eventingBasicConsumer.Received += HandleEvent;
 
+            _model.BasicConsume(_queue, true, eventingBasicConsumer);
+
+#if false           
+            _subscription = new Subscription(_model, _queue, true);
             var thread = new Thread(ReceiveEvents);
             thread.IsBackground = true;
             thread.Name = "rabbitmq:consumer";
             thread.Start();
+#endif
+
+            var uriBuilder = new UriBuilder(
+                "rabbitmq",
+                connectionFactory.HostName,
+                connectionFactory.Port,
+                queue);
+
+            Uri = uriBuilder.Uri;
+
+        }
+
+        private void HandleEvent(IBasicConsumer sender, BasicDeliverEventArgs args)
+        {
+            var elementBody = Encoding.Unicode.GetString(args.Body);
+            var element = XElement.Parse(elementBody);
+            DecodeAndRouteEvent(element);
         }
 
         /// <summary>
@@ -83,9 +105,9 @@ namespace NEsper.Catalyst.Consumers
                     var latestEvent = subscription.LatestEvent;
                     if (latestEvent != null)
                     {
-                        DecodeAndRouteEvent(
-                            latestEvent.BasicProperties.ContentType,
-                            Encoding.Unicode.GetString(latestEvent.Body));
+                        var elementBody = Encoding.Unicode.GetString(latestEvent.Body);
+                        var element = XElement.Parse(elementBody);
+                        DecodeAndRouteEvent(element);
                     }
                 }
             }

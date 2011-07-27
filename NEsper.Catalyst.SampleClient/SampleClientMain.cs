@@ -5,7 +5,10 @@
 // a copy of which has been included with this distribution in the license.txt file.  /
 ///////////////////////////////////////////////////////////////////////////////////////
 
-using System.Threading;
+using System;
+
+using NEsper.Catalyst.Client.Consumers;
+using NEsper.Catalyst.Client.Publishers;
 
 namespace NEsper.Catalyst.SampleClient
 {
@@ -17,11 +20,22 @@ namespace NEsper.Catalyst.SampleClient
 
         public static void Main()
         {
+            var configuration = new CatalystConfiguration(
+                new Uri(DEFAULT_ENGINE_URI),
+                new IEventConsumerFactory[]
+                    {
+                        new RabbitMqEventConsumerFactory("localhost"),
+                        new MsmqEventConsumerFactory()
+                    },
+                new IDataPublisherFactory[]
+                    {
+                        new RabbitMqDataPublisherFactory(),
+                        new MsmqDataPublisherFactory()
+                    });
+
+
             // create a catalyst adapter
-            var adapter = new Catalyst(
-                DEFAULT_ENGINE_URI,
-                new RabbitMqEventConsumerFactory("localhost"),
-                new MsmqEventConsumerFactory());
+            var adapter = new Catalyst(configuration);
             // attach to the default instance - i.e the default database
             var instance = adapter.GetDefaultInstance();
             // create an injector ... the purpose of the injector is to ensure that

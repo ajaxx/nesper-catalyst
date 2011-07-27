@@ -6,13 +6,19 @@
 ///////////////////////////////////////////////////////////////////////////////////////
 
 using System;
-
+using System.Xml.Linq;
 using com.espertech.esper.client;
 
 namespace NEsper.Catalyst.Client
 {
     public interface IEventConsumerFactory
     {
+        /// <summary>
+        /// Initializes the specified consumer configuration.
+        /// </summary>
+        /// <param name="consumerConfiguration">The consumer configuration.</param>
+        void Initialize(XElement consumerConfiguration);
+
         /// <summary>
         /// Returns true if the factory can subscribe to events from the specified URI.
         /// </summary>

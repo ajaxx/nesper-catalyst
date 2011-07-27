@@ -8,7 +8,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Runtime.Serialization;
-
+using System.Xml.Linq;
 using com.espertech.esper.client;
 
 namespace NEsper.Catalyst.Common
@@ -47,6 +47,13 @@ namespace NEsper.Catalyst.Common
         /// <value>The state.</value>
         [DataMember]
         public EPStatementState State { get; set; }
+
+        /// <summary>
+        /// Gets or sets the type of the event.
+        /// </summary>
+        /// <value>The type of the event.</value>
+        [DataMember]
+        public XElement EventType { get; set; }
     }
 
     [CollectionDataContract(

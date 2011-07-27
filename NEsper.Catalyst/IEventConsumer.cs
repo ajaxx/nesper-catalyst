@@ -8,6 +8,7 @@
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using NEsper.Catalyst.Common;
 
 namespace NEsper.Catalyst
 {
@@ -18,6 +19,17 @@ namespace NEsper.Catalyst
         /// </summary>
         /// <value>The URI.</value>
         Uri Uri { get; }
+
+        /// <summary>
+        /// Gets or sets the schema fabricator.
+        /// </summary>
+        /// <value>The schema fabricator.</value>
+        SchemaFabricator SchemaFabricator { get; set; }
+
+        /// <summary>
+        /// Event handler for data events.
+        /// </summary>
+        event Action<Object> DataEvent;
 
         /// <summary>
         /// Event handler for xml events.
